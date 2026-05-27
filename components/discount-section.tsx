@@ -18,6 +18,7 @@ export interface DiscountedPerfume extends Perfume {
 export function DiscountSection() {
   const [discountedProducts, setDiscountedProducts] = useState<DiscountedPerfume[]>([]);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+  const [initialLoadFailed, setInitialLoadFailed] = useState(false);
   const { addToCart } = useCart();
 
   useEffect(() => {
@@ -31,8 +32,10 @@ export function DiscountSection() {
         if (Array.isArray(saved) && saved.length > 0) {
           setDiscountedProducts(saved);
         }
+        setInitialLoadFailed(false);
       } catch (error) {
         console.error('Error loading discounted products:', error);
+        setInitialLoadFailed(true);
       } finally {
         setInitialLoadComplete(true);
       }
@@ -42,7 +45,7 @@ export function DiscountSection() {
   }, []);
 
   useEffect(() => {
-    if (!initialLoadComplete) {
+    if (!initialLoadComplete || initialLoadFailed) {
       return;
     }
 
@@ -63,7 +66,7 @@ export function DiscountSection() {
     }
 
     syncDiscounts();
-  }, [discountedProducts, initialLoadComplete]);
+  }, [discountedProducts, initialLoadComplete, initialLoadFailed]);
 
   const generateDiscounts = () => {
     // Filter out products with empty or invalid prices and those below the minimum thresholds
@@ -107,7 +110,6 @@ export function DiscountSection() {
 
   const clearDiscounts = () => {
     setDiscountedProducts([]);
-    localStorage.removeItem('discountedProducts');
   };
 
   const handleAddToCart = (product: DiscountedPerfume) => {
