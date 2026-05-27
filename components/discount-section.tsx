@@ -17,7 +17,6 @@ export interface DiscountedPerfume extends Perfume {
 
 export function DiscountSection() {
   const [discountedProducts, setDiscountedProducts] = useState<DiscountedPerfume[]>([]);
-  const [serverLoaded, setServerLoaded] = useState(false);
   const { addToCart } = useCart();
 
   useEffect(() => {
@@ -33,35 +32,13 @@ export function DiscountSection() {
         }
       } catch (error) {
         console.error('Error loading discounted products:', error);
-      } finally {
-        setServerLoaded(true);
       }
     }
 
     loadDiscounts();
   }, []);
 
-  useEffect(() => {
-    if (!serverLoaded || discountedProducts.length === 0) {
-      return;
-    }
-
-    async function saveDiscounts() {
-      try {
-        await fetch('/api/discounted-products', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(discountedProducts),
-        });
-      } catch (error) {
-        console.error('Error syncing discounted products:', error);
-      }
-    }
-
-    saveDiscounts();
-  }, [discountedProducts, serverLoaded]);
-
-  const generateDiscounts = () => {
+  const generateDiscounts = async () => {
     // Filter out products with empty or invalid prices and those below the minimum thresholds
     const validPerfumes = perfumes.filter(p => {
       const usdtValue = parseFloat(p.usdt.replace(',', '.'));
@@ -99,6 +76,16 @@ export function DiscountSection() {
     });
 
     setDiscountedProducts(discounted);
+
+    try {
+      await fetch('/api/discounted-products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(discounted),
+      });
+    } catch (error) {
+      console.error('Error saving discounted products:', error);
+    }
   };
 
   const clearDiscounts = async () => {
