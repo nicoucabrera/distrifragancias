@@ -17,44 +17,71 @@ export interface DiscountedPerfume extends Perfume {
 
 export function DiscountSection() {
   const [discountedProducts, setDiscountedProducts] = useState<DiscountedPerfume[]>([]);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const { addToCart } = useCart();
 
-  // Load discounted products from localStorage on component mount
   useEffect(() => {
-    const saved = localStorage.getItem('discountedProducts');
-    if (saved) {
+    async function loadDiscounts() {
       try {
-        const parsed = JSON.parse(saved);
-        setDiscountedProducts(parsed);
+        const response = await fetch('/api/discounted-products', { cache: 'no-store' });
+        if (!response.ok) {
+          throw new Error('Failed to load discounts');
+        }
+        const saved: DiscountedPerfume[] = await response.json();
+        if (Array.isArray(saved) && saved.length > 0) {
+          setDiscountedProducts(saved);
+        }
       } catch (error) {
         console.error('Error loading discounted products:', error);
+      } finally {
+        setInitialLoadComplete(true);
       }
     }
+
+    loadDiscounts();
   }, []);
 
-  // Save discounted products to localStorage whenever they change
   useEffect(() => {
-    if (discountedProducts.length > 0) {
-      localStorage.setItem('discountedProducts', JSON.stringify(discountedProducts));
+    if (!initialLoadComplete) {
+      return;
     }
-  }, [discountedProducts]);
+
+    async function syncDiscounts() {
+      try {
+        if (discountedProducts.length > 0) {
+          await fetch('/api/discounted-products', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(discountedProducts),
+          });
+        } else {
+          await fetch('/api/discounted-products', { method: 'DELETE' });
+        }
+      } catch (error) {
+        console.error('Error syncing discounted products:', error);
+      }
+    }
+
+    syncDiscounts();
+  }, [discountedProducts, initialLoadComplete]);
 
   const generateDiscounts = () => {
-    // Filter out products with empty or invalid prices
+    // Filter out products with empty or invalid prices and those below the minimum thresholds
     const validPerfumes = perfumes.filter(p => {
       const usdtValue = parseFloat(p.usdt.replace(',', '.'));
-      return !isNaN(usdtValue) && usdtValue > 5;
+      return (
+        !isNaN(usdtValue) &&
+        usdtValue >= 20 &&
+        p.pesos >= 30000
+      );
     });
 
     // Shuffle and pick 10 random products
     const shuffled = [...validPerfumes].sort(() => Math.random() - 0.5);
     const selected = shuffled.slice(0, 10);
 
-    // Apply random discounts (2-5 USDT)
-    const discounted: DiscountedPerfume[] = selected.map(perfume => {
-      const discountUsdt = Math.floor(Math.random() * 4) + 2; // 2 to 5
+    const applyDiscount = (perfume: Perfume, discountUsdt: number): DiscountedPerfume => {
       const discountPesos = discountUsdt * 1500;
-      
       const originalUsdt = parseFloat(perfume.usdt.replace(',', '.'));
       const finalUsdtValue = Math.max(originalUsdt - discountUsdt, 0);
       const finalPesosValue = Math.max(perfume.pesos - discountPesos, 0);
@@ -66,6 +93,13 @@ export function DiscountSection() {
         finalUsdt: finalUsdtValue.toFixed(2).replace('.', ','),
         finalPesos: finalPesosValue,
       };
+    };
+
+    const discountValues = [5, 4, ...Array.from({ length: 8 }, () => Math.floor(Math.random() * 2) + 2)];
+    const shuffledDiscounts = discountValues.sort(() => Math.random() - 0.5);
+
+    const discounted: DiscountedPerfume[] = selected.map((perfume, index) => {
+      return applyDiscount(perfume, shuffledDiscounts[index]);
     });
 
     setDiscountedProducts(discounted);
