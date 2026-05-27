@@ -24,10 +24,11 @@ export function DiscountSection() {
       try {
         const response = await fetch('/api/discounted-products', { cache: 'no-store' });
         if (!response.ok) {
-          throw new Error('Failed to load discounts');
+          const body = await response.text();
+          throw new Error(`Failed to load discounts: ${response.status} ${body}`);
         }
         const saved: DiscountedPerfume[] = await response.json();
-        if (Array.isArray(saved) && saved.length > 0) {
+        if (Array.isArray(saved)) {
           setDiscountedProducts(saved);
         }
       } catch (error) {
@@ -75,14 +76,18 @@ export function DiscountSection() {
       return applyDiscount(perfume, shuffledDiscounts[index]);
     });
 
-    setDiscountedProducts(discounted);
-
     try {
-      await fetch('/api/discounted-products', {
+      const response = await fetch('/api/discounted-products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(discounted),
       });
+
+      if (!response.ok) {
+        const body = await response.text();
+        throw new Error(`Failed to save discounts: ${response.status} ${body}`);
+      }
+      setDiscountedProducts(discounted);
     } catch (error) {
       console.error('Error saving discounted products:', error);
     }
@@ -90,12 +95,15 @@ export function DiscountSection() {
 
   const clearDiscounts = async () => {
     try {
-      await fetch('/api/discounted-products', { method: 'DELETE' });
+      const response = await fetch('/api/discounted-products', { method: 'DELETE' });
+      if (!response.ok) {
+        const body = await response.text();
+        throw new Error(`Failed to clear discounts: ${response.status} ${body}`);
+      }
+      setDiscountedProducts([]);
     } catch (error) {
       console.error('Error clearing discounts:', error);
     }
-
-    setDiscountedProducts([]);
   };
 
   const handleAddToCart = (product: DiscountedPerfume) => {
