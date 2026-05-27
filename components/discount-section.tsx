@@ -17,8 +17,7 @@ export interface DiscountedPerfume extends Perfume {
 
 export function DiscountSection() {
   const [discountedProducts, setDiscountedProducts] = useState<DiscountedPerfume[]>([]);
-  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
-  const [initialLoadFailed, setInitialLoadFailed] = useState(false);
+  const [serverLoaded, setServerLoaded] = useState(false);
   const { addToCart } = useCart();
 
   useEffect(() => {
@@ -32,12 +31,10 @@ export function DiscountSection() {
         if (Array.isArray(saved) && saved.length > 0) {
           setDiscountedProducts(saved);
         }
-        setInitialLoadFailed(false);
       } catch (error) {
         console.error('Error loading discounted products:', error);
-        setInitialLoadFailed(true);
       } finally {
-        setInitialLoadComplete(true);
+        setServerLoaded(true);
       }
     }
 
@@ -45,28 +42,24 @@ export function DiscountSection() {
   }, []);
 
   useEffect(() => {
-    if (!initialLoadComplete || initialLoadFailed) {
+    if (!serverLoaded || discountedProducts.length === 0) {
       return;
     }
 
-    async function syncDiscounts() {
+    async function saveDiscounts() {
       try {
-        if (discountedProducts.length > 0) {
-          await fetch('/api/discounted-products', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(discountedProducts),
-          });
-        } else {
-          await fetch('/api/discounted-products', { method: 'DELETE' });
-        }
+        await fetch('/api/discounted-products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(discountedProducts),
+        });
       } catch (error) {
         console.error('Error syncing discounted products:', error);
       }
     }
 
-    syncDiscounts();
-  }, [discountedProducts, initialLoadComplete, initialLoadFailed]);
+    saveDiscounts();
+  }, [discountedProducts, serverLoaded]);
 
   const generateDiscounts = () => {
     // Filter out products with empty or invalid prices and those below the minimum thresholds
@@ -108,7 +101,13 @@ export function DiscountSection() {
     setDiscountedProducts(discounted);
   };
 
-  const clearDiscounts = () => {
+  const clearDiscounts = async () => {
+    try {
+      await fetch('/api/discounted-products', { method: 'DELETE' });
+    } catch (error) {
+      console.error('Error clearing discounts:', error);
+    }
+
     setDiscountedProducts([]);
   };
 
