@@ -149,10 +149,9 @@ export function DiscountSection() {
               onClick={generateDiscounts}
               size="sm"
               className="gap-2"
-              disabled={discountedProducts.length > 0}
             >
               <RefreshCw className="h-4 w-4" />
-              {discountedProducts.length > 0 ? 'Sorteo Activo' : 'Sortear Descuentos'}
+              {discountedProducts.length > 0 ? 'Rehacer Sorteo' : 'Sortear Descuentos'}
             </Button>
           </div>
         </CardTitle>
