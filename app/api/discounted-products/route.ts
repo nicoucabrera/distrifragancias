@@ -1,47 +1,63 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { pool, ensureWinnersTable } from '@/lib/db';
 
 export async function GET() {
   try {
     await ensureWinnersTable();
-    const [rows] = await pool.query(
-      `SELECT
-         product_id AS id,
-         marca,
-         nombre,
-         usdt,
-         pesos,
-         discount_usdt AS discountUsdt,
-         discount_pesos AS discountPesos,
-         final_usdt AS finalUsdt,
-         final_pesos AS finalPesos
-       FROM discounted_winners
-       ORDER BY id ASC`
-    );
+
+    const [rows] = await pool.query(`
+      SELECT 
+        product_id as id,
+        marca,
+        nombre,
+        usdt,
+        pesos,
+        discount_usdt as discountUsdt,
+        discount_pesos as discountPesos,
+        final_usdt as finalUsdt,
+        final_pesos as finalPesos
+      FROM discounted_winners
+      ORDER BY created_at DESC
+    `);
 
     return NextResponse.json(rows);
   } catch (error) {
-    console.error('Error loading discounted products from database:', error);
-    return NextResponse.json([], { status: 500 });
+    console.error('GET ERROR:', error);
+
+    return NextResponse.json(
+      { error: 'Failed to load discounted products' },
+      { status: 500 }
+    );
   }
 }
 
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    if (!Array.isArray(body)) {
-      return NextResponse.json({ ok: false, error: 'Invalid payload' }, { status: 400 });
-    }
-
     await ensureWinnersTable();
-    const connection = await pool.getConnection();
 
-    try {
-      await connection.beginTransaction();
-      await connection.query('TRUNCATE TABLE discounted_winners');
+    const products = await req.json();
 
-      if (body.length > 0) {
-        const values = body.map((product: any) => [
+    // borrar ganadores anteriores
+    await pool.query('DELETE FROM discounted_winners');
+
+    // insertar nuevos
+    for (const product of products) {
+      await pool.query(
+        `
+        INSERT INTO discounted_winners (
+          product_id,
+          marca,
+          nombre,
+          usdt,
+          pesos,
+          discount_usdt,
+          discount_pesos,
+          final_usdt,
+          final_pesos
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `,
+        [
           product.id,
           product.marca,
           product.nombre,
@@ -51,38 +67,38 @@ export async function POST(req: NextRequest) {
           product.discountPesos,
           product.finalUsdt,
           product.finalPesos,
-        ]);
-
-        await connection.query(
-          `INSERT INTO discounted_winners
-           (product_id, marca, nombre, usdt, pesos, discount_usdt, discount_pesos, final_usdt, final_pesos)
-           VALUES ?`,
-          [values]
-        );
-      }
-
-      await connection.commit();
-    } catch (error) {
-      await connection.rollback();
-      throw error;
-    } finally {
-      connection.release();
+        ]
+      );
     }
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({
+      success: true,
+    });
   } catch (error) {
-    console.error('Error saving discounted products to database:', error);
-    return NextResponse.json({ ok: false, error: 'Unable to save discounts' }, { status: 500 });
+    console.error('POST ERROR:', error);
+
+    return NextResponse.json(
+      { error: 'Failed to save discounted products' },
+      { status: 500 }
+    );
   }
 }
 
 export async function DELETE() {
   try {
     await ensureWinnersTable();
-    await pool.query('TRUNCATE TABLE discounted_winners');
-    return NextResponse.json({ ok: true });
+
+    await pool.query('DELETE FROM discounted_winners');
+
+    return NextResponse.json({
+      success: true,
+    });
   } catch (error) {
-    console.error('Error clearing discounts from database:', error);
-    return NextResponse.json({ ok: false, error: 'Unable to clear discounts' }, { status: 500 });
+    console.error('DELETE ERROR:', error);
+
+    return NextResponse.json(
+      { error: 'Failed to clear discounted products' },
+      { status: 500 }
+    );
   }
 }
