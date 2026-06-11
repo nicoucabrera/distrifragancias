@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
-import { pool } from '@/lib/db';
+import { pool, ensurePerfumesTable } from '@/lib/db';
 
 export async function GET(request: Request) {
   try {
+    await ensurePerfumesTable();
     const url = new URL(request.url);
     const search = url.searchParams.get('search')?.trim() ?? '';
     const marca = url.searchParams.get('marca')?.trim() ?? '';
