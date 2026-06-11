@@ -36,7 +36,7 @@ export async function GET(request: Request) {
     }
 
     const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
-    const query = `SELECT id, marca, nombre, usdt, pesos FROM perfumes ${whereClause} ORDER BY marca, nombre LIMIT ?`;
+    const query = `SELECT id, marca, nombre, usdt, pesos FROM PERFUMES ${whereClause} ORDER BY marca, nombre LIMIT ?`;
     params.push(limit);
 
     const [rows] = await pool.query(query, params);

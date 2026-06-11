@@ -27,7 +27,7 @@ async function main() {
 
   try {
     await pool.query(`
-      CREATE TABLE IF NOT EXISTS perfumes (
+      CREATE TABLE IF NOT EXISTS PERFUMES (
         id INT PRIMARY KEY,
         marca VARCHAR(255) NOT NULL,
         nombre VARCHAR(1024) NOT NULL,
@@ -44,13 +44,13 @@ async function main() {
     for (let i = 0; i < rows.length; i += batchSize) {
       const batch = rows.slice(i, i + batchSize);
       await pool.query(
-        'INSERT INTO perfumes (id, marca, nombre, usdt, pesos) VALUES ? ON DUPLICATE KEY UPDATE marca = VALUES(marca), nombre = VALUES(nombre), usdt = VALUES(usdt), pesos = VALUES(pesos)',
+        'INSERT INTO PERFUMES (id, marca, nombre, usdt, pesos) VALUES ? ON DUPLICATE KEY UPDATE marca = VALUES(marca), nombre = VALUES(nombre), usdt = VALUES(usdt), pesos = VALUES(pesos)',
         [batch]
       );
       console.log(`Inserted batch ${i / batchSize + 1}/${Math.ceil(rows.length / batchSize)}`);
     }
 
-    const [count] = await pool.query('SELECT COUNT(*) AS c FROM perfumes');
+    const [count] = await pool.query('SELECT COUNT(*) AS c FROM PERFUMES');
     console.log('Perfumes in DB:', count[0].c);
   } catch (err) {
     console.error('Seeding error:', err);
