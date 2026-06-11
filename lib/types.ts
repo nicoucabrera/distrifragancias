@@ -11,4 +11,5 @@ export interface DiscountedPerfume extends Perfume {
   discountPesos: number;
   finalUsdt: string;
   finalPesos: number;
+  quantity: number;
 }

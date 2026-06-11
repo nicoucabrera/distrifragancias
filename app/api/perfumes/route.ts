@@ -39,7 +39,12 @@ export async function GET(request: Request) {
     params.push(limit);
 
     const [rows] = await pool.query(query, params);
-    return NextResponse.json(rows);
+    const perfumes = (rows as Array<{ marca: string; nombre: string; usdt: string; pesos: number }>).map((perfume) => ({
+      id: `${perfume.marca}::${perfume.nombre}`,
+      ...perfume,
+    }));
+
+    return NextResponse.json(perfumes);
   } catch (error) {
     console.error('Failed to load perfumes:', error);
     return NextResponse.json({ error: 'No se pudo cargar el catálogo de perfumes.' }, { status: 500 });

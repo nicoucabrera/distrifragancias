@@ -4,16 +4,9 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, RefreshCw, ShoppingCart } from 'lucide-react';
-import { Perfume } from '@/lib/types';
+import { Sparkles, RefreshCw, ShoppingCart, Minus } from 'lucide-react';
+import { Perfume, DiscountedPerfume } from '@/lib/types';
 import { useCart } from '@/lib/cart-context';
-
-export interface DiscountedPerfume extends Perfume {
-  discountUsdt: number;
-  discountPesos: number;
-  finalUsdt: string;
-  finalPesos: number;
-}
 
 export function DiscountSection() {
   const [discountedProducts, setDiscountedProducts] = useState<DiscountedPerfume[]>([]);
@@ -41,8 +34,7 @@ export function DiscountSection() {
 
   const loadValidPerfumes = async () => {
     const params = new URLSearchParams();
-    params.set('minUsdt', '20');
-    params.set('minPesos', '30000');
+    params.set('minPesos', '35000');
     params.set('limit', '500');
 
     const response = await fetch(`/api/perfumes?${params.toString()}`, { cache: 'no-store' });
@@ -53,39 +45,84 @@ export function DiscountSection() {
     if (!Array.isArray(data)) {
       throw new Error('Invalid perfume response');
     }
-    return data as Perfume[];
+
+    return (data as Perfume[]).map((perfume) => ({
+      ...perfume,
+      id: perfume.id ?? `${perfume.marca}::${perfume.nombre}`,
+    }));
+  };
+
+  const applyDiscount = (perfume: Perfume, discountUsdt: number, quantity: number): DiscountedPerfume => {
+    const discountPesos = discountUsdt * 1500;
+    const originalUsdt = parseFloat(perfume.usdt.replace(',', '.'));
+    const finalUsdtValue = Math.max(originalUsdt - discountUsdt, 0);
+    const finalPesosValue = Math.max(perfume.pesos - discountPesos, 0);
+
+    return {
+      ...perfume,
+      discountUsdt,
+      discountPesos,
+      finalUsdt: finalUsdtValue.toFixed(2).replace('.', ','),
+      finalPesos: finalPesosValue,
+      quantity,
+    };
+  };
+
+  const updateDiscountQuantity = async (productId: string | number, quantity: number) => {
+    const response = await fetch('/api/discounted-products', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ productId, quantity }),
+    });
+
+    if (!response.ok) {
+      const body = await response.text();
+      console.error(`Failed to update discounted product quantity: ${response.status} ${body}`);
+      return false;
+    }
+
+    return true;
   };
 
   const generateDiscounts = async () => {
     try {
-      const validPerfumes = await loadValidPerfumes();
-      if (validPerfumes.length === 0) {
-        throw new Error('No se encontraron productos válidos para descuento.');
+      const validPerfumes = (await loadValidPerfumes()).filter((perfume) => perfume.pesos >= 35000);
+      if (validPerfumes.length < 10) {
+        throw new Error('No se encontraron suficientes productos válidos para descuento.');
       }
 
       const shuffled = [...validPerfumes].sort(() => Math.random() - 0.5);
-      const selected = shuffled.slice(0, 10);
+      const eligible5 = shuffled.filter((perfume) => perfume.pesos >= 90000);
+      const selected: Perfume[] = [];
 
-      const applyDiscount = (perfume: Perfume, discountUsdt: number): DiscountedPerfume => {
-        const discountPesos = discountUsdt * 1500;
-        const originalUsdt = parseFloat(perfume.usdt.replace(',', '.'));
-        const finalUsdtValue = Math.max(originalUsdt - discountUsdt, 0);
-        const finalPesosValue = Math.max(perfume.pesos - discountPesos, 0);
+      if (eligible5.length > 0) {
+        selected.push(eligible5[0]);
+      }
 
-        return {
-          ...perfume,
-          discountUsdt,
-          discountPesos,
-          finalUsdt: finalUsdtValue.toFixed(2).replace('.', ','),
-          finalPesos: finalPesosValue,
-        };
-      };
+      const eligible4 = shuffled.filter(
+        (perfume) => perfume.pesos >= 70000 && !selected.some((selectedPerfume) => selectedPerfume.marca === perfume.marca && selectedPerfume.nombre === perfume.nombre)
+      );
 
-      const discountValues = [5, 4, ...Array.from({ length: 8 }, () => Math.floor(Math.random() * 2) + 2)];
-      const shuffledDiscounts = discountValues.sort(() => Math.random() - 0.5);
+      if (eligible4.length > 0) {
+        selected.push(eligible4[0]);
+      }
 
-      const discounted: DiscountedPerfume[] = selected.map((perfume, index) => {
-        return applyDiscount(perfume, shuffledDiscounts[index]);
+      const selectedKeys = new Set(selected.map((perfume) => `${perfume.marca}::${perfume.nombre}`));
+      const remaining = shuffled.filter((perfume) => !selectedKeys.has(`${perfume.marca}::${perfume.nombre}`)).slice(0, 10 - selected.length);
+      const finalSelection = [...selected, ...remaining].slice(0, 10);
+
+      const discounts: number[] = finalSelection.map((perfume, index) => {
+        if (index === 0 && perfume.pesos >= 90000 && eligible5.length > 0) {
+          return 5;
+        }
+        if (index === 1 && perfume.pesos >= 70000 && eligible4.length > 0) {
+          return 4;
+        }
+        return Math.random() < 0.5 ? 2 : 3;
+      });
+
+      const discounted: DiscountedPerfume[] = finalSelection.map((perfume, index) => {
+        return applyDiscount(perfume, discounts[index], Math.floor(Math.random() * 14) + 2);
       });
 
       const response = await fetch('/api/discounted-products', {
@@ -125,6 +162,24 @@ export function DiscountSection() {
       usdt: product.finalUsdt,
       pesos: product.finalPesos,
     });
+  };
+
+  const handleDecreaseQuantity = async (product: DiscountedPerfume) => {
+    if (product.quantity <= 0) {
+      return;
+    }
+
+    const newQuantity = product.quantity - 1;
+    const success = await updateDiscountQuantity(product.id, newQuantity);
+    if (!success) {
+      return;
+    }
+
+    setDiscountedProducts((current) =>
+      current.map((item) =>
+        item.id === product.id ? { ...item, quantity: newQuantity } : item
+      )
+    );
   };
 
   const formatPrice = (price: number) => {
@@ -194,13 +249,29 @@ export function DiscountSection() {
                       {product.usdt} USDT / {formatPrice(product.pesos)}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-green-600">
-                      {product.finalUsdt} USDT
-                    </span>
-                    <span className="text-sm font-semibold text-green-600">
-                      {formatPrice(product.finalPesos)}
-                    </span>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-green-600">
+                        {product.finalUsdt} USDT
+                      </span>
+                      <span className="text-sm font-semibold text-green-600">
+                        {formatPrice(product.finalPesos)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
+                      <span>
+                        Cantidad disponible: <span className="font-medium text-foreground">{product.quantity}</span>
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDecreaseQuantity(product)}
+                        disabled={product.quantity <= 0}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
                 <Button
@@ -208,6 +279,7 @@ export function DiscountSection() {
                   variant="outline"
                   onClick={() => handleAddToCart(product)}
                   className="gap-1 shrink-0"
+                  disabled={product.quantity <= 0}
                 >
                   <ShoppingCart className="h-4 w-4" />
                   Agregar

@@ -15,7 +15,8 @@ export async function GET() {
         discount_usdt as discountUsdt,
         discount_pesos as discountPesos,
         final_usdt as finalUsdt,
-        final_pesos as finalPesos
+        final_pesos as finalPesos,
+        quantity
       FROM discounted_winners
       ORDER BY created_at DESC
     `);
@@ -53,12 +54,13 @@ export async function POST(req: Request) {
           discount_usdt,
           discount_pesos,
           final_usdt,
-          final_pesos
+          final_pesos,
+          quantity
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `,
         [
-          product.id,
+          product.id?.toString(),
           product.marca,
           product.nombre,
           product.usdt,
@@ -67,6 +69,7 @@ export async function POST(req: Request) {
           product.discountPesos,
           product.finalUsdt,
           product.finalPesos,
+          product.quantity ?? 0,
         ]
       );
     }
@@ -79,6 +82,40 @@ export async function POST(req: Request) {
 
     return NextResponse.json(
       { error: 'Failed to save discounted products' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(req: Request) {
+  try {
+    await ensureWinnersTable();
+
+    const body = await req.json();
+    const productId = body.productId?.toString();
+    const quantity = Number(body.quantity ?? -1);
+
+    if (!productId || quantity < 0) {
+      return NextResponse.json(
+        { error: 'Invalid product or quantity' },
+        { status: 400 }
+      );
+    }
+
+    const [result] = await pool.query(
+      'UPDATE discounted_winners SET quantity = ? WHERE product_id = ?',
+      [quantity, productId]
+    );
+
+    return NextResponse.json({
+      success: true,
+      updated: (result as any).affectedRows,
+    });
+  } catch (error) {
+    console.error('PATCH ERROR:', error);
+
+    return NextResponse.json(
+      { error: 'Failed to update discounted product quantity' },
       { status: 500 }
     );
   }

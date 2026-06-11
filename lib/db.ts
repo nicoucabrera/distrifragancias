@@ -28,7 +28,7 @@ export async function ensureWinnersTable() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS discounted_winners (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      product_id INT NOT NULL,
+      product_id VARCHAR(255) NOT NULL,
       marca VARCHAR(255) NOT NULL,
       nombre VARCHAR(255) NOT NULL,
       usdt VARCHAR(32) NOT NULL,
@@ -37,9 +37,23 @@ export async function ensureWinnersTable() {
       discount_pesos INT NOT NULL,
       final_usdt VARCHAR(32) NOT NULL,
       final_pesos INT NOT NULL,
+      quantity INT NOT NULL DEFAULT 0,
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
+
+  const [quantityColumns] = await pool.query("SHOW COLUMNS FROM discounted_winners LIKE 'quantity'");
+  if (!Array.isArray(quantityColumns) || quantityColumns.length === 0) {
+    await pool.query('ALTER TABLE discounted_winners ADD COLUMN quantity INT NOT NULL DEFAULT 0');
+  }
+
+  const [productIdColumns] = await pool.query("SHOW COLUMNS FROM discounted_winners LIKE 'product_id'");
+  if (Array.isArray(productIdColumns) && productIdColumns.length > 0) {
+    const columnType = (productIdColumns[0] as any).Type?.toString?.().toLowerCase?.();
+    if (columnType?.startsWith('int')) {
+      await pool.query('ALTER TABLE discounted_winners MODIFY COLUMN product_id VARCHAR(255) NOT NULL');
+    }
+  }
 }
 
 export { pool };
