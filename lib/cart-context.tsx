@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, ReactNode } from 'react';
-import { Perfume } from '@/lib/perfumes-data';
+import { Perfume } from '@/lib/types';
 
 export interface CartItem extends Perfume {
   quantity: number;

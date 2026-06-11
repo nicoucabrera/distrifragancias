@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { perfumes, marcas, Perfume } from '@/lib/perfumes-data';
+import { Perfume } from '@/lib/types';
 import { useCart } from '@/lib/cart-context';
 import { Search, Plus, ShoppingCart, Filter, X } from 'lucide-react';
 
@@ -12,17 +12,54 @@ export function PerfumeSearch() {
   const [search, setSearch] = useState('');
   const [selectedMarca, setSelectedMarca] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [perfumes, setPerfumes] = useState<Perfume[]>([]);
+  const [marcas, setMarcas] = useState<string[]>([]);
   const { addToCart, items } = useCart();
 
-  const filteredPerfumes = useMemo(() => {
-    return perfumes.filter(perfume => {
-      const matchesSearch =
-        perfume.nombre.toLowerCase().includes(search.toLowerCase()) ||
-        perfume.marca.toLowerCase().includes(search.toLowerCase());
-      const matchesMarca = !selectedMarca || perfume.marca === selectedMarca;
-      return matchesSearch && matchesMarca;
-    });
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadPerfumes();
+    }, 250);
+    return () => clearTimeout(timer);
   }, [search, selectedMarca]);
+
+  useEffect(() => {
+    fetchBrands();
+  }, []);
+
+  const fetchBrands = async () => {
+    try {
+      const response = await fetch('/api/brands', { cache: 'no-store' });
+      if (!response.ok) {
+        throw new Error(`Failed to load brands: ${response.status}`);
+      }
+      const data = await response.json();
+      if (Array.isArray(data)) {
+        setMarcas(data);
+      }
+    } catch (error) {
+      console.error('Error loading marcas:', error);
+    }
+  };
+
+  const loadPerfumes = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (search) params.set('search', search);
+      if (selectedMarca) params.set('marca', selectedMarca);
+      params.set('limit', '200');
+
+      const response = await fetch(`/api/perfumes?${params.toString()}`, { cache: 'no-store' });
+      if (!response.ok) {
+        throw new Error(`Failed to load perfumes: ${response.status}`);
+      }
+      const data = await response.json();
+      setPerfumes(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Error loading perfumes:', error);
+      setPerfumes([]);
+    }
+  };
 
   const getItemQuantity = (id: number) => {
     const item = items.find(i => i.id === id);
@@ -97,19 +134,19 @@ export function PerfumeSearch() {
         </div>
         
         <p className="text-sm text-muted-foreground mt-4">
-          {filteredPerfumes.length} perfume{filteredPerfumes.length !== 1 ? 's' : ''} encontrado{filteredPerfumes.length !== 1 ? 's' : ''}
+          {perfumes.length} perfume{perfumes.length !== 1 ? 's' : ''} encontrado{perfumes.length !== 1 ? 's' : ''}
         </p>
       </div>
       
       <div className="max-h-[500px] overflow-y-auto">
-        {filteredPerfumes.length === 0 ? (
+        {perfumes.length === 0 ? (
           <div className="p-8 text-center text-muted-foreground">
             <Search className="w-12 h-12 mx-auto mb-4 opacity-50" />
             <p>No se encontraron perfumes</p>
           </div>
         ) : (
           <div className="divide-y divide-border">
-            {filteredPerfumes.map(perfume => {
+            {perfumes.map((perfume: Perfume) => {
               const quantity = getItemQuantity(perfume.id);
               return (
                 <div

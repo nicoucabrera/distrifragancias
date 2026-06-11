@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Sparkles, RefreshCw, ShoppingCart } from 'lucide-react';
-import { perfumes, Perfume } from '@/lib/perfumes-data';
+import { Perfume } from '@/lib/types';
 import { useCart } from '@/lib/cart-context';
 
 export interface DiscountedPerfume extends Perfume {
@@ -39,44 +39,55 @@ export function DiscountSection() {
     loadDiscounts();
   }, []);
 
+  const loadValidPerfumes = async () => {
+    const params = new URLSearchParams();
+    params.set('minUsdt', '20');
+    params.set('minPesos', '30000');
+    params.set('limit', '500');
+
+    const response = await fetch(`/api/perfumes?${params.toString()}`, { cache: 'no-store' });
+    if (!response.ok) {
+      throw new Error(`Failed to load valid perfumes: ${response.status}`);
+    }
+    const data = await response.json();
+    if (!Array.isArray(data)) {
+      throw new Error('Invalid perfume response');
+    }
+    return data as Perfume[];
+  };
+
   const generateDiscounts = async () => {
-    // Filter out products with empty or invalid prices and those below the minimum thresholds
-    const validPerfumes = perfumes.filter(p => {
-      const usdtValue = parseFloat(p.usdt.replace(',', '.'));
-      return (
-        !isNaN(usdtValue) &&
-        usdtValue >= 20 &&
-        p.pesos >= 30000
-      );
-    });
-
-    // Shuffle and pick 10 random products
-    const shuffled = [...validPerfumes].sort(() => Math.random() - 0.5);
-    const selected = shuffled.slice(0, 10);
-
-    const applyDiscount = (perfume: Perfume, discountUsdt: number): DiscountedPerfume => {
-      const discountPesos = discountUsdt * 1500;
-      const originalUsdt = parseFloat(perfume.usdt.replace(',', '.'));
-      const finalUsdtValue = Math.max(originalUsdt - discountUsdt, 0);
-      const finalPesosValue = Math.max(perfume.pesos - discountPesos, 0);
-
-      return {
-        ...perfume,
-        discountUsdt,
-        discountPesos,
-        finalUsdt: finalUsdtValue.toFixed(2).replace('.', ','),
-        finalPesos: finalPesosValue,
-      };
-    };
-
-    const discountValues = [5, 4, ...Array.from({ length: 8 }, () => Math.floor(Math.random() * 2) + 2)];
-    const shuffledDiscounts = discountValues.sort(() => Math.random() - 0.5);
-
-    const discounted: DiscountedPerfume[] = selected.map((perfume, index) => {
-      return applyDiscount(perfume, shuffledDiscounts[index]);
-    });
-
     try {
+      const validPerfumes = await loadValidPerfumes();
+      if (validPerfumes.length === 0) {
+        throw new Error('No se encontraron productos válidos para descuento.');
+      }
+
+      const shuffled = [...validPerfumes].sort(() => Math.random() - 0.5);
+      const selected = shuffled.slice(0, 10);
+
+      const applyDiscount = (perfume: Perfume, discountUsdt: number): DiscountedPerfume => {
+        const discountPesos = discountUsdt * 1500;
+        const originalUsdt = parseFloat(perfume.usdt.replace(',', '.'));
+        const finalUsdtValue = Math.max(originalUsdt - discountUsdt, 0);
+        const finalPesosValue = Math.max(perfume.pesos - discountPesos, 0);
+
+        return {
+          ...perfume,
+          discountUsdt,
+          discountPesos,
+          finalUsdt: finalUsdtValue.toFixed(2).replace('.', ','),
+          finalPesos: finalPesosValue,
+        };
+      };
+
+      const discountValues = [5, 4, ...Array.from({ length: 8 }, () => Math.floor(Math.random() * 2) + 2)];
+      const shuffledDiscounts = discountValues.sort(() => Math.random() - 0.5);
+
+      const discounted: DiscountedPerfume[] = selected.map((perfume, index) => {
+        return applyDiscount(perfume, shuffledDiscounts[index]);
+      });
+
       const response = await fetch('/api/discounted-products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -89,7 +100,7 @@ export function DiscountSection() {
       }
       setDiscountedProducts(discounted);
     } catch (error) {
-      console.error('Error saving discounted products:', error);
+      console.error('Error generating discounted products:', error);
     }
   };
 
