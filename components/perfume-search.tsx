@@ -54,14 +54,19 @@ export function PerfumeSearch() {
         throw new Error(`Failed to load perfumes: ${response.status}`);
       }
       const data = await response.json();
-      setPerfumes(Array.isArray(data) ? data : []);
+      // Generate unique IDs if not present
+      const perfumesWithIds = (Array.isArray(data) ? data : []).map((p: any, index: number) => ({
+        ...p,
+        id: p.id ?? `${p.marca}-${p.nombre}`.toLowerCase().replace(/\s+/g, '-')
+      }));
+      setPerfumes(perfumesWithIds);
     } catch (error) {
       console.error('Error loading perfumes:', error);
       setPerfumes([]);
     }
   };
 
-  const getItemQuantity = (id: number) => {
+  const getItemQuantity = (id: string | number) => {
     const item = items.find(i => i.id === id);
     return item?.quantity || 0;
   };

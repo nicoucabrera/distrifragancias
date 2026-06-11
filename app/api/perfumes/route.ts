@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
-import { pool, ensurePerfumesTable } from '@/lib/db';
+import { pool } from '@/lib/db';
 
 export async function GET(request: Request) {
   try {
-    await ensurePerfumesTable();
     const url = new URL(request.url);
     const search = url.searchParams.get('search')?.trim() ?? '';
     const marca = url.searchParams.get('marca')?.trim() ?? '';
@@ -16,27 +15,27 @@ export async function GET(request: Request) {
     const params: Array<string | number> = [];
 
     if (search) {
-      conditions.push('(LOWER(nombre) LIKE ? OR LOWER(marca) LIKE ?)');
+      conditions.push('(LOWER(NOMBRE) LIKE ? OR LOWER(MARCA) LIKE ?)');
       params.push(`%${search.toLowerCase()}%`, `%${search.toLowerCase()}%`);
     }
 
     if (marca) {
-      conditions.push('marca = ?');
+      conditions.push('MARCA = ?');
       params.push(marca);
     }
 
     if (!isNaN(minUsdt) && minUsdt > 0) {
-      conditions.push('CAST(REPLACE(usdt, ",", ".") AS DECIMAL(10,2)) >= ?');
+      conditions.push('CAST(REPLACE(USDT, ",", ".") AS DECIMAL(10,2)) >= ?');
       params.push(minUsdt);
     }
 
     if (!isNaN(minPesos) && minPesos > 0) {
-      conditions.push('pesos >= ?');
+      conditions.push('PESOS >= ?');
       params.push(minPesos);
     }
 
     const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
-    const query = `SELECT id, marca, nombre, usdt, pesos FROM PERFUMES ${whereClause} ORDER BY marca, nombre LIMIT ?`;
+    const query = `SELECT MARCA as marca, NOMBRE as nombre, USDT as usdt, PESOS as pesos FROM PERFUMES ${whereClause} ORDER BY MARCA, NOMBRE LIMIT ?`;
     params.push(limit);
 
     const [rows] = await pool.query(query, params);

@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server';
-import { pool, ensurePerfumesTable } from '@/lib/db';
+import { pool } from '@/lib/db';
 
 export async function GET() {
   try {
-    await ensurePerfumesTable();
-    const [rows] = await pool.query('SELECT DISTINCT marca FROM PERFUMES ORDER BY marca');
+    const [rows] = await pool.query('SELECT DISTINCT MARCA as marca FROM PERFUMES ORDER BY MARCA');
     const marcas = (rows as Array<{ marca: string }>).map(row => row.marca);
     return NextResponse.json(marcas);
   } catch (error) {

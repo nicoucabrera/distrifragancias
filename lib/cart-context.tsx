@@ -18,8 +18,8 @@ interface CartContextType {
   items: CartItem[];
   clientInfo: ClientInfo;
   addToCart: (perfume: Perfume) => void;
-  removeFromCart: (id: number) => void;
-  updateQuantity: (id: number, quantity: number) => void;
+  removeFromCart: (id: string | number) => void;
+  updateQuantity: (id: string | number, quantity: number) => void;
   clearCart: () => void;
   setClientInfo: (info: ClientInfo) => void;
   getSubtotalPesos: () => number;
@@ -49,11 +49,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const removeFromCart = (id: number) => {
+  const removeFromCart = (id: string | number) => {
     setItems(prev => prev.filter(item => item.id !== id));
   };
 
-  const updateQuantity = (id: number, quantity: number) => {
+  const updateQuantity = (id: string | number, quantity: number) => {
     if (quantity < 1) {
       removeFromCart(id);
       return;

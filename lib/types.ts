@@ -1,5 +1,5 @@
 export interface Perfume {
-  id: number;
+  id: string | number;
   marca: string;
   nombre: string;
   usdt: string;
