@@ -13,7 +13,6 @@ const pool = mysql.createPool({
 export async function ensurePerfumesTable() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS PERFUMES (
-      id INT PRIMARY KEY,
       marca VARCHAR(255) NOT NULL,
       nombre VARCHAR(1024) NOT NULL,
       usdt VARCHAR(32) NOT NULL,

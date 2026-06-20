@@ -155,6 +155,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         items,
         clientInfo,
         addToCart,
+        updateProduct,
         removeFromCart,
         updateQuantity,
         clearCart,

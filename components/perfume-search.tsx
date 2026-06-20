@@ -65,7 +65,7 @@ export function PerfumeSearch() {
 
   const openNewProduct = () => {
     setIsEditing(false);
-    setForm({ marca: '', nombre: '', usdt: '', pesos: '', saveToDb: true });
+    setForm({ marca: '', nombre: '', usdt: '', pesos: '', saveToDb: false });
     setErrorMessage(null);
     setOpenDialog(true);
   };
@@ -149,7 +149,7 @@ export function PerfumeSearch() {
         await loadPerfumes();
         await fetchBrands();
       } else {
-        const tempId = `local-${payload.marca.toLowerCase().replace(/\s+/g, '-')}-${payload.nombre.toLowerCase().replace(/\s+/g, '-')}`;
+        const tempId = `${payload.marca}::${payload.nombre}`;
         addToCart({ id: tempId, ...payload });
       }
 
@@ -233,7 +233,7 @@ export function PerfumeSearch() {
               className="gap-2"
             >
               <Plus className="w-4 h-4" />
-              Nuevo producto
+              Agregar producto manual
             </Button>
             <Button
               variant="outline"
@@ -280,6 +280,51 @@ export function PerfumeSearch() {
           <div className="p-8 text-center text-muted-foreground">
             <Search className="w-12 h-12 mx-auto mb-4 opacity-50" />
             <p>No se encontraron perfumes</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-border">
+            {perfumes.map((perfume) => {
+              const quantity = getItemQuantity(perfume.id);
+
+              return (
+                <div
+                  key={perfume.id}
+                  className="flex flex-col gap-3 p-4 transition-colors hover:bg-secondary/40 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="font-medium text-foreground">{perfume.nombre}</h3>
+                      {quantity > 0 && (
+                        <Badge variant="secondary">{quantity} en carrito</Badge>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground">{perfume.marca}</p>
+                    <div className="mt-1 flex flex-wrap gap-3 text-sm">
+                      <span>USDT {perfume.usdt}</span>
+                      <span>${perfume.pesos.toLocaleString('es-AR')}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex shrink-0 items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => openEditProduct(perfume)}
+                      aria-label="Editar producto"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      onClick={() => handleAddToCart(perfume)}
+                      aria-label="Agregar al carrito"
+                    >
+                      <ShoppingCart className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
@@ -342,7 +387,7 @@ export function PerfumeSearch() {
                   onCheckedChange={(checked) => handleFormChange('saveToDb', Boolean(checked))}
                 />
                 <Label htmlFor="saveToDb" className="text-sm">
-                  Guardar en la base de datos y mostrarlo en el catálogo
+                  Guardar tambien en la base de datos
                 </Label>
               </div>
             )}
