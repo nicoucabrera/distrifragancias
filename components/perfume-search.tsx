@@ -4,9 +4,12 @@ import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Perfume } from '@/lib/types';
 import { useCart } from '@/lib/cart-context';
-import { Search, Plus, ShoppingCart, Filter, X } from 'lucide-react';
+import { Search, Plus, ShoppingCart, Filter, X, Pencil } from 'lucide-react';
 
 export function PerfumeSearch() {
   const [search, setSearch] = useState('');
@@ -14,7 +17,25 @@ export function PerfumeSearch() {
   const [showFilters, setShowFilters] = useState(false);
   const [perfumes, setPerfumes] = useState<Perfume[]>([]);
   const [marcas, setMarcas] = useState<string[]>([]);
-  const { addToCart, items } = useCart();
+  const [openDialog, setOpenDialog] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [form, setForm] = useState<{
+    id?: string | number;
+    marca: string;
+    nombre: string;
+    usdt: string;
+    pesos: string;
+    saveToDb: boolean;
+  }>({
+    marca: '',
+    nombre: '',
+    usdt: '',
+    pesos: '',
+    saveToDb: true,
+  });
+  const { addToCart, items, updateProduct } = useCart();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -40,6 +61,108 @@ export function PerfumeSearch() {
     } catch (error) {
       console.error('Error loading marcas:', error);
     }
+  };
+
+  const openNewProduct = () => {
+    setIsEditing(false);
+    setForm({ marca: '', nombre: '', usdt: '', pesos: '', saveToDb: true });
+    setErrorMessage(null);
+    setOpenDialog(true);
+  };
+
+  const openEditProduct = (perfume: Perfume) => {
+    setIsEditing(true);
+    setForm({
+      id: perfume.id,
+      marca: perfume.marca,
+      nombre: perfume.nombre,
+      usdt: perfume.usdt,
+      pesos: String(perfume.pesos),
+      saveToDb: true,
+    });
+    setErrorMessage(null);
+    setOpenDialog(true);
+  };
+
+  const formatUsdt = (value: string) => {
+    const parsed = parseFloat(value.replace(',', '.'));
+    if (Number.isNaN(parsed)) return '';
+    return parsed.toFixed(2).replace('.', ',');
+  };
+
+  const validateProductForm = () => {
+    if (!form.marca.trim()) return 'Marca es obligatoria.';
+    if (!form.nombre.trim()) return 'Nombre es obligatorio.';
+    const parsedUsdt = parseFloat(form.usdt.replace(',', '.'));
+    if (Number.isNaN(parsedUsdt) || parsedUsdt < 0) return 'USDT inválido.';
+    const pesosValue = parseInt(form.pesos, 10);
+    if (Number.isNaN(pesosValue) || pesosValue < 0) return 'Pesos inválidos.';
+    return null;
+  };
+
+  const handleSaveProduct = async () => {
+    const validationError = validateProductForm();
+    if (validationError) {
+      setErrorMessage(validationError);
+      return;
+    }
+
+    const payload = {
+      marca: form.marca.trim(),
+      nombre: form.nombre.trim(),
+      usdt: formatUsdt(form.usdt),
+      pesos: parseInt(form.pesos, 10),
+    };
+
+    setSaving(true);
+    setErrorMessage(null);
+
+    try {
+      if (isEditing) {
+        const response = await fetch('/api/perfumes', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: form.id, ...payload }),
+        });
+
+        if (!response.ok) {
+          const body = await response.json();
+          throw new Error(body?.error || 'Error al actualizar el producto.');
+        }
+
+        updateProduct({ id: form.id!, ...payload });
+        await loadPerfumes();
+      } else if (form.saveToDb) {
+        const response = await fetch('/api/perfumes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+          const body = await response.json();
+          throw new Error(body?.error || 'Error al guardar el producto.');
+        }
+
+        const saved = await response.json();
+        addToCart({ id: saved.id, ...payload });
+        await loadPerfumes();
+        await fetchBrands();
+      } else {
+        const tempId = `local-${payload.marca.toLowerCase().replace(/\s+/g, '-')}-${payload.nombre.toLowerCase().replace(/\s+/g, '-')}`;
+        addToCart({ id: tempId, ...payload });
+      }
+
+      setOpenDialog(false);
+    } catch (error: any) {
+      setErrorMessage(error?.message || 'No se pudo procesar el producto.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleFormChange = (field: keyof typeof form, value: string | boolean) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
   };
 
   const loadPerfumes = async () => {
@@ -102,7 +225,16 @@ export function PerfumeSearch() {
             )}
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={openNewProduct}
+              className="gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Nuevo producto
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -149,55 +281,86 @@ export function PerfumeSearch() {
             <Search className="w-12 h-12 mx-auto mb-4 opacity-50" />
             <p>No se encontraron perfumes</p>
           </div>
-        ) : (
-          <div className="divide-y divide-border">
-            {perfumes.map((perfume: Perfume) => {
-              const quantity = getItemQuantity(perfume.id);
-              return (
-                <div
-                  key={perfume.id}
-                  className="p-4 hover:bg-secondary/30 transition-colors"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <Badge variant="outline" className="mb-2 text-xs">
-                        {perfume.marca}
-                      </Badge>
-                      <h3 className="font-medium text-foreground text-sm leading-tight">
-                        {perfume.nombre}
-                      </h3>
-                      <div className="flex items-center gap-3 mt-2">
-                        <span className="text-primary font-semibold">
-                          ${perfume.pesos ? perfume.pesos.toLocaleString('es-AR') : 'N/A'}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {perfume.usdt} USDT
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {quantity > 0 && (
-                        <Badge className="bg-primary/20 text-primary border-0">
-                          <ShoppingCart className="w-3 h-3 mr-1" />
-                          {quantity}
-                        </Badge>
-                      )}
-                      <Button
-                        size="sm"
-                        onClick={() => handleAddToCart(perfume)}
-                        className="gap-1"
-                      >
-                        <Plus className="w-4 h-4" />
-                        Agregar
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
         )}
       </div>
+
+      <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              {isEditing ? 'Editar producto' : 'Agregar perfume nuevo'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="marca">Marca</Label>
+                <Input
+                  id="marca"
+                  value={form.marca}
+                  onChange={(e) => handleFormChange('marca', e.target.value)}
+                  placeholder="Ej: Chanel"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="nombre">Nombre</Label>
+                <Input
+                  id="nombre"
+                  value={form.nombre}
+                  onChange={(e) => handleFormChange('nombre', e.target.value)}
+                  placeholder="Ej: Bleu de Chanel"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="usdt">USDT</Label>
+                <Input
+                  id="usdt"
+                  value={form.usdt}
+                  onChange={(e) => handleFormChange('usdt', e.target.value)}
+                  placeholder="Ej: 65,50"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="pesos">Pesos</Label>
+                <Input
+                  id="pesos"
+                  type="number"
+                  step="1"
+                  min="0"
+                  value={form.pesos}
+                  onChange={(e) => handleFormChange('pesos', e.target.value)}
+                  placeholder="Ej: 130000"
+                />
+              </div>
+            </div>
+
+            {!isEditing && (
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="saveToDb"
+                  checked={form.saveToDb}
+                  onCheckedChange={(checked) => handleFormChange('saveToDb', Boolean(checked))}
+                />
+                <Label htmlFor="saveToDb" className="text-sm">
+                  Guardar en la base de datos y mostrarlo en el catálogo
+                </Label>
+              </div>
+            )}
+
+            {errorMessage && (
+              <p className="text-sm text-destructive">{errorMessage}</p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpenDialog(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveProduct} disabled={saving} className="gap-2">
+              {saving ? 'Guardando...' : isEditing ? 'Guardar cambios' : 'Agregar al carrito'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

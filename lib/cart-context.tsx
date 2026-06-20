@@ -18,6 +18,7 @@ interface CartContextType {
   items: CartItem[];
   clientInfo: ClientInfo;
   addToCart: (perfume: Perfume) => void;
+  updateProduct: (perfume: Perfume) => void;
   removeFromCart: (id: string | number) => void;
   updateQuantity: (id: string | number, quantity: number) => void;
   clearCart: () => void;
@@ -47,6 +48,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       return [...prev, { ...perfume, quantity: 1 }];
     });
+  };
+
+  const updateProduct = (perfume: Perfume) => {
+    setItems(prev =>
+      prev.map(item => (item.id === perfume.id ? { ...item, ...perfume } : item))
+    );
   };
 
   const removeFromCart = (id: string | number) => {

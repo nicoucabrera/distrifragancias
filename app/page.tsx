@@ -3,7 +3,9 @@ import { ClientForm } from '@/components/client-form';
 import { DiscountSection } from '@/components/discount-section';
 import { PerfumeSearch } from '@/components/perfume-search';
 import { Cart } from '@/components/cart';
-import { Sparkles } from 'lucide-react';
+import Link from 'next/link';
+import { Sparkles, Wallet } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export default function Home() {
   return (
@@ -12,15 +14,28 @@ export default function Home() {
         {/* Header */}
         <header className="bg-card border-b border-border sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-4 py-4">
-            <div className="flex items-center justify-center gap-3">
-              <Sparkles className="w-8 h-8 text-primary" />
-              <h1 className="text-2xl font-bold text-foreground tracking-tight">
-                DISTRIFRAGANCIAS
-              </h1>
+            <div className="flex items-center justify-between">
+              <div className="flex-1" />
+              <div className="flex flex-col items-center">
+                <div className="flex items-center gap-3">
+                  <Sparkles className="w-8 h-8 text-primary" />
+                  <h1 className="text-2xl font-bold text-foreground tracking-tight">
+                    DISTRIFRAGANCIAS
+                  </h1>
+                </div>
+                <p className="text-center text-muted-foreground text-sm mt-1">
+                  Catálogo de Perfumes Importados
+                </p>
+              </div>
+              <div className="flex-1 flex justify-end">
+                <Link href="/cuentas">
+                  <Button variant="outline" size="sm">
+                    <Wallet className="h-4 w-4 mr-1" />
+                    Cuentas
+                  </Button>
+                </Link>
+              </div>
             </div>
-            <p className="text-center text-muted-foreground text-sm mt-1">
-              Catálogo de Perfumes Importados
-            </p>
           </div>
         </header>
 

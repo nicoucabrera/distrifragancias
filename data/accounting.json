@@ -1,0 +1,404 @@
+{
+  "costos": [
+    {
+      "id": "482cd10a-2fb0-4a9f-9da2-622bd346c2c4",
+      "fecha": "2026-04-07",
+      "descripcion": "PUBLICIDAD",
+      "monto": 100000.0
+    },
+    {
+      "id": "dc94e928-f47b-4c9b-aa3d-08896197fda4",
+      "fecha": "2026-04-16",
+      "descripcion": "PUBLICIDAD",
+      "monto": 70000.0
+    },
+    {
+      "id": "3a241f77-c8dd-4a76-b474-4f82d3b4a399",
+      "fecha": "2026-04-22",
+      "descripcion": "PUBLICIDAD",
+      "monto": 85000.0
+    },
+    {
+      "id": "1b630cbd-da99-4c03-a4e7-648240c240df",
+      "fecha": "2026-05-04",
+      "descripcion": "PUBLICIDAD",
+      "monto": 90000.0
+    },
+    {
+      "id": "4f7ecbdd-decc-42d6-b7c2-7893cb9451ae",
+      "fecha": "2026-05-11",
+      "descripcion": "PUBLICIDAD",
+      "monto": 90000.0
+    },
+    {
+      "id": "80bc73e4-bd14-4189-a8df-e53823a1e154",
+      "fecha": "2026-05-15",
+      "descripcion": "PERFUMEROS",
+      "monto": 20000.0
+    },
+    {
+      "id": "108870f5-836c-40d9-91de-939a3ce1d627",
+      "fecha": "2026-05-25",
+      "descripcion": "MIC Y ARO",
+      "monto": 20000.0
+    },
+    {
+      "id": "cd169efc-41cf-4eaa-83b4-980cab31cca8",
+      "fecha": "2026-06-08",
+      "descripcion": "PUBLICIDAD",
+      "monto": 108000.0
+    },
+    {
+      "id": "f4d2b888-10c3-49b5-8cd7-22076b7da484",
+      "fecha": "2026-06-08",
+      "descripcion": "LUKAS",
+      "monto": 17500.0
+    }
+  ],
+  "pedidos": [
+    {
+      "id": "7665296f-3232-4059-9f1f-fc01d867d6fc",
+      "fecha": "2026-04-10",
+      "cliente": "Tomas Giustozzi",
+      "montoVenta": 176346.0,
+      "tipoCambio": 1471.2,
+      "prodUsdt": 106.0,
+      "envio": 5454.0
+    },
+    {
+      "id": "95e219bc-21e3-4e6b-8394-317896452838",
+      "fecha": "2026-04-10",
+      "cliente": "Fabri Marin",
+      "montoVenta": 270000.0,
+      "tipoCambio": 1471.2,
+      "prodUsdt": 156.0,
+      "envio": 2726.0
+    },
+    {
+      "id": "14a9161c-f8e5-4c0e-858a-8dbdda0e566b",
+      "fecha": "2026-04-10",
+      "cliente": "Luis Bisokoff",
+      "montoVenta": 52520.0,
+      "tipoCambio": 1471.2,
+      "prodUsdt": 28.0,
+      "envio": 1363.0
+    },
+    {
+      "id": "058987a1-e403-47c3-b4cb-ebdc62d2899d",
+      "fecha": "2026-04-13",
+      "cliente": "Leon Ucha",
+      "montoVenta": 137360.0,
+      "tipoCambio": 1469.0,
+      "prodUsdt": 67.75,
+      "envio": 4089.0
+    },
+    {
+      "id": "99a92ddb-ffc2-4136-bb99-4a727453475e",
+      "fecha": "2026-04-13",
+      "cliente": "Dani Baez",
+      "montoVenta": 36425.0,
+      "tipoCambio": 1454.7,
+      "prodUsdt": 23.0,
+      "envio": 1363.0
+    },
+    {
+      "id": "92b0b48c-4b76-4c6d-b83a-aa4c0656122e",
+      "fecha": "2026-04-24",
+      "cliente": "Primo de Lucas",
+      "montoVenta": 58254.0,
+      "tipoCambio": 1476.0,
+      "prodUsdt": 26.0,
+      "envio": 1888.0
+    },
+    {
+      "id": "215d0c21-2996-4653-aa44-dcf9f739b68e",
+      "fecha": "2026-04-24",
+      "cliente": "Lucas",
+      "montoVenta": 31500.0,
+      "tipoCambio": 1469.0,
+      "prodUsdt": 19.0,
+      "envio": 1888.0
+    },
+    {
+      "id": "af96728d-2a50-4077-a7c3-1ea598e4736e",
+      "fecha": "2026-04-27",
+      "cliente": "Marianela Cardozo",
+      "montoVenta": 85217.0,
+      "tipoCambio": 1482.0,
+      "prodUsdt": 38.5,
+      "envio": 3777.0
+    },
+    {
+      "id": "9763ff08-0023-48bc-8114-de4d951d42d0",
+      "fecha": "2026-05-03",
+      "cliente": "Soledad González",
+      "montoVenta": 84136.0,
+      "tipoCambio": 1490.0,
+      "prodUsdt": 37.4,
+      "envio": 4105.0
+    },
+    {
+      "id": "58db6417-2e1b-4222-a391-95a1a1e7d42b",
+      "fecha": "2026-05-04",
+      "cliente": "Tomas Giustozzi",
+      "montoVenta": 443325.0,
+      "tipoCambio": 1486.5,
+      "prodUsdt": 205.25,
+      "envio": 15048.0
+    },
+    {
+      "id": "2cab4dff-80d0-4d03-8dca-9a9470a792ae",
+      "fecha": "2026-05-04",
+      "cliente": "Primo de Gabi",
+      "montoVenta": 110000.0,
+      "tipoCambio": 1487.5,
+      "prodUsdt": 56.7,
+      "envio": 4105.0
+    },
+    {
+      "id": "ce81b091-67b1-4e2b-bcdc-5f993d16cf3d",
+      "fecha": "2026-05-12",
+      "cliente": "BOMBAS B&B",
+      "montoVenta": 165200.0,
+      "tipoCambio": 1479.1,
+      "prodUsdt": 77.0,
+      "envio": 4533.0
+    },
+    {
+      "id": "83092b25-b9eb-4f17-8a97-27b2eb9f7167",
+      "fecha": "2026-05-12",
+      "cliente": "CHIMU",
+      "montoVenta": 37000.0,
+      "tipoCambio": 1479.1,
+      "prodUsdt": 16.25,
+      "envio": 1133.0
+    },
+    {
+      "id": "b7a03b6d-bc1d-460a-a411-dc0759b6618f",
+      "fecha": "2026-05-21",
+      "cliente": "FARMACIA",
+      "montoVenta": 50000.0,
+      "tipoCambio": 1483.6,
+      "prodUsdt": 18.5,
+      "envio": 772.0
+    },
+    {
+      "id": "c374b559-dd32-4e96-8ef0-c254647fab3a",
+      "fecha": "2026-05-27",
+      "cliente": "Tomas Giustozzi",
+      "montoVenta": 130238.0,
+      "tipoCambio": 1488.0,
+      "prodUsdt": 105.0,
+      "envio": 10808.0
+    },
+    {
+      "id": "c9d7b93c-9366-4a6b-a5ad-14d6063f5b96",
+      "fecha": "2026-05-27",
+      "cliente": "9PM ELIXIR",
+      "montoVenta": 72000.0,
+      "tipoCambio": 1488.0,
+      "prodUsdt": 29.5,
+      "envio": 772.0
+    },
+    {
+      "id": "129fe461-6d8f-4734-96ed-1b0d62584047",
+      "fecha": "2026-05-27",
+      "cliente": "IMMORTAL",
+      "montoVenta": 45000.0,
+      "tipoCambio": 1488.0,
+      "prodUsdt": 17.0,
+      "envio": 772.0
+    },
+    {
+      "id": "844a493a-204f-4e1d-a098-bf371d1a2c2e",
+      "fecha": "2026-05-27",
+      "cliente": "HAWAS",
+      "montoVenta": 55000.0,
+      "tipoCambio": 1488.0,
+      "prodUsdt": 18.5,
+      "envio": 772.0
+    },
+    {
+      "id": "59eb01b0-b223-4dbd-9b11-b36a1d673a33",
+      "fecha": "2026-06-08",
+      "cliente": "UBER",
+      "montoVenta": 184400.0,
+      "tipoCambio": 1517.0,
+      "prodUsdt": 94.0,
+      "envio": 0
+    },
+    {
+      "id": "b82493b3-c016-4676-9776-e05e2df95cc9",
+      "fecha": "2026-06-09",
+      "cliente": "MARIANO HOSPI",
+      "montoVenta": 65000.0,
+      "tipoCambio": 1519.8,
+      "prodUsdt": 25.5,
+      "envio": 0
+    },
+    {
+      "id": "89873274-1d7f-4a78-a6b7-8766b4ba62fc",
+      "fecha": "2026-06-09",
+      "cliente": "RODRI HOSPI",
+      "montoVenta": 32000.0,
+      "tipoCambio": 1519.8,
+      "prodUsdt": 11.0,
+      "envio": 0
+    },
+    {
+      "id": "4c82cd5f-cc5c-4de0-9861-7dbd1521aea2",
+      "fecha": "2026-06-10",
+      "cliente": "CAMILA HOSPI",
+      "montoVenta": 65000.0,
+      "tipoCambio": 1515.0,
+      "prodUsdt": 27.5,
+      "envio": 0
+    }
+  ],
+  "stock": [
+    {
+      "id": "cc10a4e3-8d99-4865-bcfc-5be5bab494cb",
+      "cliente": "HAWAS MALIBU",
+      "montoVenta": 72000.0,
+      "tipoCambio": 1490.0,
+      "productosUsdt": 28.0,
+      "envio": 1888.0,
+      "detalle": null
+    },
+    {
+      "id": "c1b5b862-061f-4509-9ff1-f393283fdffa",
+      "cliente": "HAWAS BLACK",
+      "montoVenta": 60000.0,
+      "tipoCambio": 1490.0,
+      "productosUsdt": 25.0,
+      "envio": 1888.0,
+      "detalle": null
+    },
+    {
+      "id": "e718444e-9217-4da5-9403-d33659c76d85",
+      "cliente": "HAWAS ELIXIR",
+      "montoVenta": 60000.0,
+      "tipoCambio": 1490.0,
+      "productosUsdt": 25.0,
+      "envio": 1888.0,
+      "detalle": null
+    },
+    {
+      "id": "21d27b0b-b67d-4a95-9050-ae9dbc010ceb",
+      "cliente": "9PM REBEL",
+      "montoVenta": 72000.0,
+      "tipoCambio": 1490.0,
+      "productosUsdt": 30.0,
+      "envio": 1888.0,
+      "detalle": null
+    },
+    {
+      "id": "28993ba9-763e-4084-be86-30bda86ccbdb",
+      "cliente": "HAWAS KOBRA",
+      "montoVenta": 90000.0,
+      "tipoCambio": 1486.0,
+      "productosUsdt": 36.5,
+      "envio": 1368.0,
+      "detalle": null
+    },
+    {
+      "id": "7c8e6a90-4329-4c8c-a619-b389f54c08a6",
+      "cliente": "JL IMMORTAL",
+      "montoVenta": 45000.0,
+      "tipoCambio": 1486.0,
+      "productosUsdt": 18.0,
+      "envio": 1368.0,
+      "detalle": "VENDIDO"
+    },
+    {
+      "id": "ec7e33aa-76e4-40a1-97cd-70ae97abca4b",
+      "cliente": "SUPREMACY COLLECTORS",
+      "montoVenta": 92000.0,
+      "tipoCambio": 1490.0,
+      "productosUsdt": 42.0,
+      "envio": 1888.0,
+      "detalle": "NICO"
+    },
+    {
+      "id": "9b6d8da4-586b-400f-b3e3-5184f0a35229",
+      "cliente": "MANDARIN SKY",
+      "montoVenta": 65000.0,
+      "tipoCambio": 1477.2,
+      "productosUsdt": 21.0,
+      "envio": 1133.0,
+      "detalle": "GABI"
+    },
+    {
+      "id": "93100dfa-b874-407c-8918-f0746c4fd39c",
+      "cliente": "LATTAFA HAYAATI FLORENCE",
+      "montoVenta": 40000.0,
+      "tipoCambio": 1477.2,
+      "productosUsdt": 10.75,
+      "envio": 1133.0,
+      "detalle": "GABI"
+    },
+    {
+      "id": "a9f3484a-c808-4013-ab8f-c40a6b9ba7cb",
+      "cliente": "KHAMRAH",
+      "montoVenta": 48000.0,
+      "tipoCambio": 1477.2,
+      "productosUsdt": 18.5,
+      "envio": 1133.0,
+      "detalle": null
+    },
+    {
+      "id": "e4b510e1-6037-460d-9d1f-f26534ec6498",
+      "cliente": "AMEERATI",
+      "montoVenta": 38000.0,
+      "tipoCambio": 1477.2,
+      "productosUsdt": 12.0,
+      "envio": 1133.0,
+      "detalle": null
+    },
+    {
+      "id": "7e779dc3-ef6f-4abc-aa30-480b4d54b601",
+      "cliente": "SABAH AL WARD",
+      "montoVenta": 38000.0,
+      "tipoCambio": 1477.2,
+      "productosUsdt": 13.0,
+      "envio": 1133.0,
+      "detalle": "NICO"
+    },
+    {
+      "id": "6ba7fb15-a275-408a-b247-5113070f4545",
+      "cliente": "SALVO EDP",
+      "montoVenta": 42000.0,
+      "tipoCambio": 1477.2,
+      "productosUsdt": 14.5,
+      "envio": 1133.0,
+      "detalle": null
+    },
+    {
+      "id": "cb553426-14be-4fa3-bc72-f5b7c143a4ab",
+      "cliente": "ATLAS",
+      "montoVenta": 62500.0,
+      "tipoCambio": 1477.2,
+      "productosUsdt": 22.5,
+      "envio": 1133.0,
+      "detalle": null
+    },
+    {
+      "id": "64693937-156c-4714-b28a-8d8877bd1a94",
+      "cliente": "JL IMMORTAL",
+      "montoVenta": 45000.0,
+      "tipoCambio": 1488.0,
+      "productosUsdt": 18.5,
+      "envio": 772.0,
+      "detalle": null
+    },
+    {
+      "id": "0c7e8ecc-4095-475c-b56c-fdb0319ec705",
+      "cliente": "YEAH MAN",
+      "montoVenta": 35000.0,
+      "tipoCambio": 1485.0,
+      "productosUsdt": 11.75,
+      "envio": 772.0,
+      "detalle": "NICO"
+    }
+  ]
+}
