@@ -6,9 +6,36 @@ const pool = mysql.createPool({
   password: process.env.MYSQL_PASSWORD || 'fkSEFdX9Di',
   database: process.env.MYSQL_DATABASE || 'sql10822633',
   waitForConnections: true,
-  connectionLimit: 5,
+  connectionLimit: 3,
   queueLimit: 0,
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 10000,
+  idleTimeout: 30000,
+  connectTimeout: 20000,
 });
+
+// The free MySQL host aggressively closes idle connections, which surfaces as
+// PROTOCOL_CONNECTION_LOST / ECONNRESET errors. Retry those transient failures.
+const RETRYABLE_CODES = new Set(['PROTOCOL_CONNECTION_LOST', 'ECONNRESET', 'ETIMEDOUT', 'EPIPE']);
+
+export async function queryWithRetry<T = any>(
+  sql: string,
+  params: Array<string | number> = [],
+  retries = 2,
+): Promise<[T, any]> {
+  let lastError: any;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return (await pool.query(sql, params)) as unknown as [T, any];
+    } catch (error: any) {
+      lastError = error;
+      if (!RETRYABLE_CODES.has(error?.code)) throw error;
+      // brief backoff before retrying a dropped connection
+      await new Promise((resolve) => setTimeout(resolve, 300 * (attempt + 1)));
+    }
+  }
+  throw lastError;
+}
 
 export async function ensurePerfumesTable() {
   await pool.query(`

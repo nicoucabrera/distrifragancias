@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { pool } from '@/lib/db';
+import { pool, queryWithRetry } from '@/lib/db';
 
 function normalizeUsdt(value: string) {
   const parsed = parseFloat(value.replace(',', '.'));
@@ -129,7 +129,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'El monto a multiplicar es inválido.' }, { status: 400 });
     }
 
-    const [result] = await pool.query(
+    const [result] = await queryWithRetry(
       'UPDATE PERFUMES SET PESOS = ROUND(CAST(REPLACE(USDT, ",", ".") AS DECIMAL(10,2)) * ?)',
       [factor],
     );
