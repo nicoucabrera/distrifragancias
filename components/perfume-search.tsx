@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Perfume } from '@/lib/types';
 import { useCart } from '@/lib/cart-context';
-import { Search, Plus, ShoppingCart, Filter, X, Pencil } from 'lucide-react';
+import { Search, Plus, ShoppingCart, Filter, X, Pencil, RefreshCw } from 'lucide-react';
 
 export function PerfumeSearch() {
   const [search, setSearch] = useState('');
@@ -21,6 +21,11 @@ export function PerfumeSearch() {
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [openPriceDialog, setOpenPriceDialog] = useState(false);
+  const [priceFactor, setPriceFactor] = useState('');
+  const [updatingPrices, setUpdatingPrices] = useState(false);
+  const [priceError, setPriceError] = useState<string | null>(null);
+  const [priceSuccess, setPriceSuccess] = useState<string | null>(null);
   const [form, setForm] = useState<{
     id?: string | number;
     marca: string;
@@ -165,6 +170,46 @@ export function PerfumeSearch() {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
+  const openPriceUpdate = () => {
+    setPriceFactor('');
+    setPriceError(null);
+    setPriceSuccess(null);
+    setOpenPriceDialog(true);
+  };
+
+  const handleUpdatePrices = async () => {
+    const factor = parseFloat(priceFactor.replace(',', '.'));
+    if (Number.isNaN(factor) || factor <= 0) {
+      setPriceError('Ingresa un monto válido mayor a 0.');
+      return;
+    }
+
+    setUpdatingPrices(true);
+    setPriceError(null);
+    setPriceSuccess(null);
+
+    try {
+      const response = await fetch('/api/perfumes', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ factor }),
+      });
+
+      if (!response.ok) {
+        const body = await response.json();
+        throw new Error(body?.error || 'Error al actualizar los precios.');
+      }
+
+      const result = await response.json();
+      setPriceSuccess(`Se actualizaron ${result.updated} precios (USDT x ${factor}).`);
+      await loadPerfumes();
+    } catch (error: any) {
+      setPriceError(error?.message || 'No se pudieron actualizar los precios.');
+    } finally {
+      setUpdatingPrices(false);
+    }
+  };
+
   const loadPerfumes = async () => {
     try {
       const params = new URLSearchParams();
@@ -234,6 +279,15 @@ export function PerfumeSearch() {
             >
               <Plus className="w-4 h-4" />
               Agregar producto manual
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={openPriceUpdate}
+              className="gap-2"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Actualizar precios
             </Button>
             <Button
               variant="outline"
@@ -402,6 +456,52 @@ export function PerfumeSearch() {
             </Button>
             <Button onClick={handleSaveProduct} disabled={saving} className="gap-2">
               {saving ? 'Guardando...' : isEditing ? 'Guardar cambios' : 'Agregar al carrito'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={openPriceDialog} onOpenChange={setOpenPriceDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Actualizar precios en pesos</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <p className="text-sm text-muted-foreground">
+              Ingresa el valor del dólar/USDT. El precio en pesos de cada producto se
+              calculará multiplicando su columna USDT por este monto.
+            </p>
+            <div className="space-y-2">
+              <Label htmlFor="priceFactor">Monto por USDT</Label>
+              <Input
+                id="priceFactor"
+                inputMode="decimal"
+                value={priceFactor}
+                onChange={(e) => setPriceFactor(e.target.value)}
+                placeholder="Ej: 1550"
+              />
+            </div>
+
+            {(() => {
+              const factor = parseFloat(priceFactor.replace(',', '.'));
+              if (Number.isNaN(factor) || factor <= 0) return null;
+              const example = Math.round(26.5 * factor);
+              return (
+                <p className="text-sm text-muted-foreground">
+                  Ejemplo: USDT 26,50 x {factor} = ${example.toLocaleString('es-AR')}
+                </p>
+              );
+            })()}
+
+            {priceError && <p className="text-sm text-destructive">{priceError}</p>}
+            {priceSuccess && <p className="text-sm text-primary">{priceSuccess}</p>}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpenPriceDialog(false)}>
+              Cerrar
+            </Button>
+            <Button onClick={handleUpdatePrices} disabled={updatingPrices} className="gap-2">
+              {updatingPrices ? 'Actualizando...' : 'Actualizar precios'}
             </Button>
           </DialogFooter>
         </DialogContent>

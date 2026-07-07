@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { pool } from '@/lib/db';
+import { pool, queryWithRetry } from '@/lib/db';
 
 function normalizeUsdt(value: string) {
   const parsed = parseFloat(value.replace(',', '.'));
@@ -117,6 +117,29 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Failed to save perfume:', error);
     return NextResponse.json({ error: 'No se pudo guardar el perfume en la base de datos.' }, { status: 500 });
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const body = await request.json();
+    const factor = parseFloat(String(body.factor).replace(',', '.'));
+
+    if (Number.isNaN(factor) || factor <= 0) {
+      return NextResponse.json({ error: 'El monto a multiplicar es inválido.' }, { status: 400 });
+    }
+
+    const [result] = await queryWithRetry(
+      'UPDATE PERFUMES SET PESOS = ROUND(CAST(REPLACE(USDT, ",", ".") AS DECIMAL(10,2)) * ?)',
+      [factor],
+    );
+
+    const affectedRows = (result as any).affectedRows ?? 0;
+
+    return NextResponse.json({ updated: affectedRows, factor });
+  } catch (error) {
+    console.error('Failed to bulk update prices:', error);
+    return NextResponse.json({ error: 'No se pudieron actualizar los precios.' }, { status: 500 });
   }
 }
 
