@@ -1,19 +1,24 @@
 import { CartProvider } from '@/lib/cart-context';
+import { RateProvider } from '@/lib/rate-context';
 import { ClientForm } from '@/components/client-form';
 import { DiscountSection } from '@/components/discount-section';
 import { PerfumeSearch } from '@/components/perfume-search';
 import { Cart } from '@/components/cart';
+import { CotizacionBadge } from '@/components/cotizacion-badge';
 import { Sparkles } from 'lucide-react';
 
 export default function Home() {
   return (
+    <RateProvider>
     <CartProvider>
       <div className="min-h-screen bg-background">
         {/* Header */}
         <header className="bg-card border-b border-border sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
-              <div className="flex-1" />
+              <div className="flex-1 flex justify-start">
+                <CotizacionBadge />
+              </div>
               <div className="flex flex-col items-center">
                 <div className="flex items-center gap-3">
                   <Sparkles className="w-8 h-8 text-primary" />
@@ -59,5 +64,6 @@ export default function Home() {
         </footer>
       </div>
     </CartProvider>
+    </RateProvider>
   );
 }

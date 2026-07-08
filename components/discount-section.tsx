@@ -7,10 +7,12 @@ import { Badge } from '@/components/ui/badge';
 import { Sparkles, RefreshCw, ShoppingCart, Minus } from 'lucide-react';
 import { Perfume, DiscountedPerfume } from '@/lib/types';
 import { useCart } from '@/lib/cart-context';
+import { useRate } from '@/lib/rate-context';
 
 export function DiscountSection() {
   const [discountedProducts, setDiscountedProducts] = useState<DiscountedPerfume[]>([]);
   const { addToCart } = useCart();
+  const { rate } = useRate();
 
   useEffect(() => {
     async function loadDiscounts() {
@@ -53,7 +55,7 @@ export function DiscountSection() {
   };
 
   const applyDiscount = (perfume: Perfume, discountUsdt: number, quantity: number): DiscountedPerfume => {
-    const discountPesos = discountUsdt * 1500;
+    const discountPesos = discountUsdt * rate;
     const originalUsdt = parseFloat(perfume.usdt.replace(',', '.'));
     const finalUsdtValue = Math.max(originalUsdt - discountUsdt, 0);
     const finalPesosValue = Math.max(perfume.pesos - discountPesos, 0);

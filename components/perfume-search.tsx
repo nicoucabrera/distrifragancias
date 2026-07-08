@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Perfume } from '@/lib/types';
 import { useCart } from '@/lib/cart-context';
+import { useRate } from '@/lib/rate-context';
 import { Search, Plus, ShoppingCart, Filter, X, Pencil, RefreshCw } from 'lucide-react';
 
 export function PerfumeSearch() {
@@ -41,6 +42,7 @@ export function PerfumeSearch() {
     saveToDb: true,
   });
   const { addToCart, items, updateProduct } = useCart();
+  const { rate } = useRate();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -171,7 +173,7 @@ export function PerfumeSearch() {
   };
 
   const openPriceUpdate = () => {
-    setPriceFactor('');
+    setPriceFactor(String(rate));
     setPriceError(null);
     setPriceSuccess(null);
     setOpenPriceDialog(true);
