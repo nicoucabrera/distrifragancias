@@ -3,9 +3,7 @@ import { ClientForm } from '@/components/client-form';
 import { DiscountSection } from '@/components/discount-section';
 import { PerfumeSearch } from '@/components/perfume-search';
 import { Cart } from '@/components/cart';
-import Link from 'next/link';
-import { Sparkles, Wallet } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Sparkles } from 'lucide-react';
 
 export default function Home() {
   return (
@@ -27,14 +25,7 @@ export default function Home() {
                   Catálogo de Perfumes Importados
                 </p>
               </div>
-              <div className="flex-1 flex justify-end">
-                <Link href="/cuentas">
-                  <Button variant="outline" size="sm">
-                    <Wallet className="h-4 w-4 mr-1" />
-                    Cuentas
-                  </Button>
-                </Link>
-              </div>
+              <div className="flex-1" />
             </div>
           </div>
         </header>
