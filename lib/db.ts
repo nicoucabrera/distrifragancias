@@ -80,6 +80,11 @@ export async function ensureWinnersTable() {
       await pool.query('ALTER TABLE discounted_winners MODIFY COLUMN product_id VARCHAR(255) NOT NULL');
     }
   }
+
+  const [manualColumns] = await pool.query("SHOW COLUMNS FROM discounted_winners LIKE 'is_manual'");
+  if (!Array.isArray(manualColumns) || manualColumns.length === 0) {
+    await pool.query('ALTER TABLE discounted_winners ADD COLUMN is_manual BOOLEAN NOT NULL DEFAULT FALSE');
+  }
 }
 
 export { pool };

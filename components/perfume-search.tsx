@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Perfume } from '@/lib/types';
 import { useCart } from '@/lib/cart-context';
 import { useRate } from '@/lib/rate-context';
-import { Search, Plus, ShoppingCart, Filter, X, Pencil, RefreshCw } from 'lucide-react';
+import { Search, Plus, ShoppingCart, Filter, X, Pencil, RefreshCw, Tag } from 'lucide-react';
 
 export function PerfumeSearch() {
   const [search, setSearch] = useState('');
@@ -27,6 +27,11 @@ export function PerfumeSearch() {
   const [updatingPrices, setUpdatingPrices] = useState(false);
   const [priceError, setPriceError] = useState<string | null>(null);
   const [priceSuccess, setPriceSuccess] = useState<string | null>(null);
+  const [discountDialogOpen, setDiscountDialogOpen] = useState(false);
+  const [discountPerfume, setDiscountPerfume] = useState<Perfume | null>(null);
+  const [discountAmount, setDiscountAmount] = useState('');
+  const [addingDiscount, setAddingDiscount] = useState(false);
+  const [discountError, setDiscountError] = useState<string | null>(null);
   const [form, setForm] = useState<{
     id?: string | number;
     marca: string;
@@ -177,6 +182,69 @@ export function PerfumeSearch() {
     setPriceError(null);
     setPriceSuccess(null);
     setOpenPriceDialog(true);
+  };
+
+  const openDiscountDialog = (perfume: Perfume) => {
+    setDiscountPerfume(perfume);
+    setDiscountAmount('');
+    setDiscountError(null);
+    setDiscountDialogOpen(true);
+  };
+
+  const handleAddManualDiscount = async () => {
+    if (!discountPerfume) return;
+
+    const amount = parseFloat(discountAmount.replace(',', '.'));
+    if (Number.isNaN(amount) || amount <= 0) {
+      setDiscountError('Ingresa un monto de descuento válido mayor a 0.');
+      return;
+    }
+
+    const originalUsdt = parseFloat(discountPerfume.usdt.replace(',', '.'));
+    if (amount >= originalUsdt) {
+      setDiscountError('El descuento no puede ser mayor o igual al precio.');
+      return;
+    }
+
+    const discountPesos = amount * rate;
+    const finalUsdt = Math.max(originalUsdt - amount, 0);
+    const finalPesos = Math.max(discountPerfume.pesos - discountPesos, 0);
+
+    setAddingDiscount(true);
+    setDiscountError(null);
+
+    try {
+      const response = await fetch('/api/discounted-products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          manual: true,
+          product: {
+            id: discountPerfume.id,
+            marca: discountPerfume.marca,
+            nombre: discountPerfume.nombre,
+            usdt: discountPerfume.usdt,
+            pesos: discountPerfume.pesos,
+            discountUsdt: amount,
+            discountPesos,
+            finalUsdt: finalUsdt.toFixed(2).replace('.', ','),
+            finalPesos,
+            quantity: 1,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        const body = await response.json();
+        throw new Error(body?.error || 'No se pudo agregar el descuento.');
+      }
+
+      setDiscountDialogOpen(false);
+    } catch (error: any) {
+      setDiscountError(error?.message || 'No se pudo agregar el descuento.');
+    } finally {
+      setAddingDiscount(false);
+    }
   };
 
   const handleUpdatePrices = async () => {
@@ -371,6 +439,16 @@ export function PerfumeSearch() {
                       <Pencil className="h-4 w-4" />
                     </Button>
                     <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => openDiscountDialog(perfume)}
+                      aria-label="Agregar descuento manual"
+                      className="text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                      title="Agregar descuento manual"
+                    >
+                      <Tag className="h-4 w-4" />
+                    </Button>
+                    <Button
                       size="icon"
                       onClick={() => handleAddToCart(perfume)}
                       aria-label="Agregar al carrito"
@@ -504,6 +582,56 @@ export function PerfumeSearch() {
             </Button>
             <Button onClick={handleUpdatePrices} disabled={updatingPrices} className="gap-2">
               {updatingPrices ? 'Actualizando...' : 'Actualizar precios'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={discountDialogOpen} onOpenChange={setDiscountDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Tag className="h-5 w-5 text-amber-600" />
+              Agregar descuento manual
+            </DialogTitle>
+          </DialogHeader>
+          {discountPerfume && (
+            <div className="space-y-4 mt-2">
+              <div className="p-3 bg-secondary/50 rounded-lg">
+                <p className="font-medium text-foreground">{discountPerfume.nombre}</p>
+                <p className="text-sm text-muted-foreground">{discountPerfume.marca}</p>
+                <p className="text-sm font-semibold text-primary mt-1">
+                  Precio: USDT {discountPerfume.usdt} / ${discountPerfume.pesos.toLocaleString('es-AR')}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="discountAmount">Monto del descuento (USDT)</Label>
+                <Input
+                  id="discountAmount"
+                  inputMode="decimal"
+                  value={discountAmount}
+                  onChange={(e) => setDiscountAmount(e.target.value)}
+                  placeholder="Ej: 3,50"
+                />
+              </div>
+              {discountAmount && !Number.isNaN(parseFloat(discountAmount.replace(',', '.'))) && (
+                <p className="text-sm text-muted-foreground">
+                  Precio final: USDT{' '}
+                  {Math.max(
+                    parseFloat(discountPerfume.usdt.replace(',', '.')) - parseFloat(discountAmount.replace(',', '.')),
+                    0
+                  ).toFixed(2).replace('.', ',')}
+                </p>
+              )}
+              {discountError && <p className="text-sm text-destructive">{discountError}</p>}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDiscountDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleAddManualDiscount} disabled={addingDiscount} className="gap-2">
+              {addingDiscount ? 'Agregando...' : 'Agregar descuento'}
             </Button>
           </DialogFooter>
         </DialogContent>

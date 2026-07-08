@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, RefreshCw, ShoppingCart, Minus } from 'lucide-react';
+import { Sparkles, RefreshCw, ShoppingCart, Minus, X, Tag } from 'lucide-react';
 import { Perfume, DiscountedPerfume } from '@/lib/types';
 import { useCart } from '@/lib/cart-context';
 import { useRate } from '@/lib/rate-context';
@@ -137,7 +137,14 @@ export function DiscountSection() {
         const body = await response.text();
         throw new Error(`Failed to save discounts: ${response.status} ${body}`);
       }
-      setDiscountedProducts(discounted);
+      // Refetch to include both lottery and manual discounts
+      const refetch = await fetch('/api/discounted-products', { cache: 'no-store' });
+      if (refetch.ok) {
+        const all: DiscountedPerfume[] = await refetch.json();
+        if (Array.isArray(all)) {
+          setDiscountedProducts(all);
+        }
+      }
     } catch (error) {
       console.error('Error generating discounted products:', error);
     }
@@ -145,7 +152,7 @@ export function DiscountSection() {
 
   const clearDiscounts = async () => {
     try {
-      const response = await fetch('/api/discounted-products', { method: 'DELETE' });
+      const response = await fetch('/api/discounted-products?all=true', { method: 'DELETE' });
       if (!response.ok) {
         const body = await response.text();
         throw new Error(`Failed to clear discounts: ${response.status} ${body}`);
@@ -153,6 +160,21 @@ export function DiscountSection() {
       setDiscountedProducts([]);
     } catch (error) {
       console.error('Error clearing discounts:', error);
+    }
+  };
+
+  const removeManualDiscount = async (productId: string | number) => {
+    try {
+      const response = await fetch(`/api/discounted-products?productId=${encodeURIComponent(productId.toString())}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        const body = await response.text();
+        throw new Error(`Failed to remove discount: ${response.status} ${body}`);
+      }
+      setDiscountedProducts((current) => current.filter((item) => item.id !== productId));
+    } catch (error) {
+      console.error('Error removing manual discount:', error);
     }
   };
 
@@ -210,7 +232,7 @@ export function DiscountSection() {
                 className="gap-2"
               >
                 <RefreshCw className="h-4 w-4" />
-                Nuevo Sorteo
+                Limpiar Todo
               </Button>
             )}
             <Button
@@ -244,6 +266,12 @@ export function DiscountSection() {
                     <Badge className="bg-green-500 text-white text-xs shrink-0">
                       -{product.discountUsdt} USDT
                     </Badge>
+                    {product.isManual && (
+                      <Badge variant="outline" className="text-xs shrink-0 border-amber-500 text-amber-600 gap-1">
+                        <Tag className="h-3 w-3" />
+                        Manual
+                      </Badge>
+                    )}
                   </div>
                   <p className="font-medium text-sm truncate">{product.nombre}</p>
                   <div className="flex items-center gap-2 mt-1">
@@ -286,6 +314,17 @@ export function DiscountSection() {
                   <ShoppingCart className="h-4 w-4" />
                   Agregar
                 </Button>
+                {product.isManual && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => removeManualDiscount(product.id)}
+                    className="gap-1 shrink-0 text-destructive hover:text-destructive"
+                    title="Eliminar descuento manual"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             ))}
           </div>
