@@ -6,8 +6,6 @@ import { useRate } from '@/lib/rate-context';
 
 export interface CartItem extends Perfume {
   quantity: number;
-  retailMode?: boolean;
-  retailPlus?: number;
 }
 
 export interface ClientInfo {
@@ -23,8 +21,8 @@ export interface SavedQuote {
   createdAt: string;
 }
 
-  const COMMISSION_RATE = 0.15; // 15% comision mayoreo
-  const RETAIL_RATE = 0.30; // 30% comision minorista
+const COMMISSION_RATE = 0.15;
+const RETAIL_RATE = 0.30;
 
 interface CartContextType {
   items: CartItem[];
@@ -36,10 +34,8 @@ interface CartContextType {
   clearCart: () => void;
   setClientInfo: (info: ClientInfo) => void;
   getSubtotalPesos: () => number;
-  getCommissionPesos: () => number;
   getTotalPesos: () => number;
   getSubtotalUSDT: () => string;
-  getCommissionUSDT: () => string;
   getTotalUSDT: () => string;
   getQuoteText: () => string;
   // Saved quotes
@@ -48,18 +44,24 @@ interface CartContextType {
   saveCurrentQuote: () => Promise<boolean>;
   loadQuote: (quote: SavedQuote) => void;
   deleteQuote: (id: number) => Promise<void>;
-  // Retail mode
-  setRetailMode: (id: string | number, enabled: boolean) => void;
-  setRetailPlus: (id: string | number, plus: number) => void;
+  // Retail mode (global)
+  retailMode: boolean;
+  retailPlus: number;
+  toggleRetailMode: () => void;
+  setRetailPlus: (plus: number) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const { rate } = useRate();
+  const { rate: exchangeRate } = useRate();
   const [items, setItems] = useState<CartItem[]>([]);
   const [clientInfo, setClientInfo] = useState<ClientInfo>({ nombre: '', tel: '' });
   const [savedQuotes, setSavedQuotes] = useState<SavedQuote[]>([]);
+  const [retailMode, setRetailMode] = useState(false);
+  const [retailPlus, setRetailPlusState] = useState(0);
+
+  const activeRate = retailMode ? RETAIL_RATE : COMMISSION_RATE;
 
   const addToCart = (perfume: Perfume) => {
     setItems(prev => {
@@ -97,60 +99,43 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems([]);
   };
 
-  const getItemRate = (item: CartItem) =>
-    item.retailMode ? RETAIL_RATE : COMMISSION_RATE;
-
-  const getItemTotalPesos = (item: CartItem) => {
-    const base = item.pesos * item.quantity;
-    const commission = base * getItemRate(item);
-    return base + commission + (item.retailPlus || 0);
+  const toggleRetailMode = () => {
+    setRetailMode(prev => !prev);
+    setRetailPlusState(0);
   };
+
+  const setRetailPlus = (plus: number) => {
+    setRetailPlusState(plus);
+  };
+
+  // ── Calculations ──────────────────────────────────────────
 
   const getSubtotalPesos = () => {
-    return items.reduce((total, item) => total + getItemTotalPesos(item), 0);
-  };
-
-  const getCommissionPesos = () => {
-    return items.reduce((total, item) => {
-      const base = item.pesos * item.quantity;
-      return total + Math.round(base * getItemRate(item));
-    }, 0);
+    const base = items.reduce((total, item) => total + item.pesos * item.quantity, 0);
+    return base;
   };
 
   const getTotalPesos = () => {
-    return items.reduce((total, item) => total + getItemTotalPesos(item), 0);
+    const base = items.reduce((total, item) => total + item.pesos * item.quantity, 0);
+    const commission = Math.round(base * activeRate);
+    return base + commission + (retailMode ? retailPlus : 0);
   };
 
   const getSubtotalUSDT = () => {
-    const total = items.reduce((acc, item) => {
+    const baseUsdt = items.reduce((acc, item) => {
       const price = parseFloat(item.usdt.replace(',', '.'));
-      const base = price * item.quantity;
-      const rate = getItemRate(item);
-      const plusPesos = item.retailPlus || 0;
-      const plusUsdt = plusPesos / rate;
-      return acc + base * (1 + rate) + plusUsdt;
+      return acc + price * item.quantity;
     }, 0);
-    return total.toFixed(2).replace('.', ',');
-  };
-
-  const getCommissionUSDT = () => {
-    const total = items.reduce((acc, item) => {
-      const price = parseFloat(item.usdt.replace(',', '.'));
-      const base = price * item.quantity;
-      return acc + base * getItemRate(item);
-    }, 0);
+    const total = baseUsdt * (1 + activeRate) + (retailMode ? retailPlus / exchangeRate : 0);
     return total.toFixed(2).replace('.', ',');
   };
 
   const getTotalUSDT = () => {
-    const total = items.reduce((acc, item) => {
+    const baseUsdt = items.reduce((acc, item) => {
       const price = parseFloat(item.usdt.replace(',', '.'));
-      const base = price * item.quantity;
-      const rate = getItemRate(item);
-      const plusPesos = item.retailPlus || 0;
-      const plusUsdt = plusPesos / rate;
-      return acc + base * (1 + rate) + plusUsdt;
+      return acc + price * item.quantity;
     }, 0);
+    const total = baseUsdt * (1 + activeRate) + (retailMode ? retailPlus / exchangeRate : 0);
     return total.toFixed(2).replace('.', ',');
   };
 
@@ -206,25 +191,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [loadSavedQuotes]);
 
-  // ── Retail Mode ───────────────────────────────────────────
-
-  const setRetailMode = (id: string | number, enabled: boolean) => {
-    setItems(prev =>
-      prev.map(item =>
-        item.id === id ? { ...item, retailMode: enabled, retailPlus: 0 } : item
-      )
-    );
-  };
-
-  const setRetailPlus = (id: string | number, plus: number) => {
-    setItems(prev =>
-      prev.map(item =>
-        item.id === id ? { ...item, retailPlus: plus } : item
-      )
-    );
-  };
-
-  // ── Calculations ──────────────────────────────────────────
+  // ── Quote Text ────────────────────────────────────────────
 
   const getQuoteText = () => {
     const date = new Date().toLocaleDateString('es-AR');
@@ -243,19 +210,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
     text += `────────────────────────\n`;
     
     items.forEach((item, index) => {
-      const rate = getItemRate(item);
-      const rateLabel = rate === RETAIL_RATE ? 'Minorista' : 'Mayoreo';
-      const base = item.pesos * item.quantity;
-      const commission = Math.round(base * rate);
-      const plus = item.retailPlus || 0;
-      const itemTotal = base + commission + plus;
-      const subtotalUsdt = (parseFloat(item.usdt.replace(',', '.')) * item.quantity * (1 + rate) + plus / rate).toFixed(2).replace('.', ',');
+      const subtotalPesos = item.pesos * item.quantity;
+      const subtotalUsdt = (parseFloat(item.usdt.replace(',', '.')) * item.quantity).toFixed(2).replace('.', ',');
       text += `${index + 1}. ${item.marca}\n`;
       text += `   ${item.nombre}\n`;
       text += `   Cant: ${item.quantity} x $${item.pesos.toLocaleString('es-AR')}\n`;
-      text += `   Modo: ${rateLabel} (${Math.round(rate * 100)}%)\n`;
-      if (plus > 0) text += `   Plus: $${plus.toLocaleString('es-AR')}\n`;
-      text += `   Subtotal: $${itemTotal.toLocaleString('es-AR')} (${subtotalUsdt} USDT)\n\n`;
+      text += `   Subtotal: $${subtotalPesos.toLocaleString('es-AR')} (${subtotalUsdt} USDT)\n\n`;
     });
     
     text += `────────────────────────\n`;
@@ -279,10 +239,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         clearCart,
         setClientInfo,
         getSubtotalPesos,
-        getCommissionPesos,
         getTotalPesos,
         getSubtotalUSDT,
-        getCommissionUSDT,
         getTotalUSDT,
         getQuoteText,
         savedQuotes,
@@ -290,7 +248,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
         saveCurrentQuote,
         loadQuote,
         deleteQuote,
-        setRetailMode,
+        retailMode,
+        retailPlus,
+        toggleRetailMode,
         setRetailPlus,
       }}
     >

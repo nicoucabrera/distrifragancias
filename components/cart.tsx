@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { useCart } from '@/lib/cart-context';
-import { ShoppingCart, Minus, Plus, Trash2, Copy, Check, X, Store, Package } from 'lucide-react';
+import { ShoppingCart, Minus, Plus, Trash2, Copy, Check, X, Store } from 'lucide-react';
 
 export function Cart() {
   const {
@@ -19,7 +19,9 @@ export function Cart() {
     getTotalUSDT,
     getQuoteText,
     clientInfo,
-    setRetailMode,
+    retailMode,
+    retailPlus,
+    toggleRetailMode,
     setRetailPlus,
   } = useCart();
   const [copied, setCopied] = useState(false);
@@ -40,12 +42,6 @@ export function Cart() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
-  };
-
-  const getItemTotal = (item: typeof items[0]) => {
-    const rate = item.retailMode ? 0.30 : 0.15;
-    const base = item.pesos * item.quantity;
-    return base + Math.round(base * rate) + (item.retailPlus || 0);
   };
 
   return (
@@ -93,7 +89,7 @@ export function Cart() {
                     <h4 className="text-sm font-medium text-foreground leading-tight">
                       {item.nombre}
                     </h4>
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <p className="text-sm text-primary font-semibold mt-1">
                       ${item.pesos.toLocaleString('es-AR')} c/u
                     </p>
                   </div>
@@ -105,7 +101,6 @@ export function Cart() {
                   </button>
                 </div>
                 
-                {/* Quantity + Price */}
                 <div className="flex items-center justify-between mt-3">
                   <div className="flex items-center gap-2">
                     <Button
@@ -127,39 +122,9 @@ export function Cart() {
                     </Button>
                   </div>
                   <p className="font-semibold text-foreground">
-                    ${getItemTotal(item).toLocaleString('es-AR')}
+                    ${(item.pesos * item.quantity).toLocaleString('es-AR')}
                   </p>
                 </div>
-
-                {/* Retail mode toggle */}
-                <div className="flex items-center gap-2 mt-2">
-                  <Button
-                    variant={item.retailMode ? 'default' : 'outline'}
-                    size="sm"
-                    className="h-7 text-xs gap-1"
-                    onClick={() => setRetailMode(item.id, !item.retailMode)}
-                  >
-                    {item.retailMode ? (
-                      <><Store className="w-3 h-3" /> Minorista (30%)</>
-                    ) : (
-                      <><Package className="w-3 h-3" /> Mayoreo (15%)</>
-                    )}
-                  </Button>
-                </div>
-
-                {/* Retail plus input */}
-                {item.retailMode && (
-                  <div className="flex items-center gap-2 mt-2">
-                    <span className="text-xs text-muted-foreground">Plus $</span>
-                    <Input
-                      type="number"
-                      className="h-7 w-28 text-xs"
-                      placeholder="0"
-                      value={item.retailPlus || ''}
-                      onChange={(e) => setRetailPlus(item.id, parseFloat(e.target.value) || 0)}
-                    />
-                  </div>
-                )}
               </div>
             ))}
           </div>
@@ -167,7 +132,7 @@ export function Cart() {
           <div className="p-6 bg-secondary/30 border-t border-border">
             <div className="space-y-2 mb-4">
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Total ({items.reduce((acc, item) => acc + item.quantity, 0)} productos)</span>
+                <span className="text-muted-foreground">Subtotal ({items.reduce((acc, item) => acc + item.quantity, 0)} productos)</span>
                 <div className="text-right">
                   <span className="font-medium">${getSubtotalPesos().toLocaleString('es-AR')}</span>
                   <span className="text-muted-foreground text-xs ml-1">({getSubtotalUSDT()} USDT)</span>
@@ -201,6 +166,30 @@ export function Cart() {
                 </>
               )}
             </Button>
+
+            {/* Retail mode toggle */}
+            <Button
+              variant={retailMode ? 'default' : 'outline'}
+              className="w-full gap-2 mt-2"
+              size="lg"
+              onClick={toggleRetailMode}
+            >
+              <Store className="w-4 h-4" />
+              {retailMode ? 'Por menor (30%)' : 'Por menor'}
+            </Button>
+
+            {retailMode && (
+              <div className="flex items-center gap-2 mt-2">
+                <span className="text-sm text-muted-foreground whitespace-nowrap">Plus $</span>
+                <Input
+                  type="number"
+                  className="h-9 text-sm"
+                  placeholder="0"
+                  value={retailPlus || ''}
+                  onChange={(e) => setRetailPlus(parseFloat(e.target.value) || 0)}
+                />
+              </div>
+            )}
           </div>
         </>
       )}
