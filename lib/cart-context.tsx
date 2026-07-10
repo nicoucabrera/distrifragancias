@@ -1,8 +1,11 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useRef, useCallback, ReactNode } from 'react';
 import { Perfume } from '@/lib/types';
 import { useRate } from '@/lib/rate-context';
+
+const CART_STORAGE_KEY = 'distrifragancias-cart';
+const CLIENT_STORAGE_KEY = 'distrifragancias-client';
 
 export interface CartItem extends Perfume {
   quantity: number;
@@ -62,6 +65,49 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [savedQuotes, setSavedQuotes] = useState<SavedQuote[]>([]);
   const [retailMode, setRetailMode] = useState(false);
   const [retailPlus, setRetailPlusState] = useState(0);
+  const loaded = useRef(false);
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    try {
+      const savedCart = localStorage.getItem(CART_STORAGE_KEY);
+      if (savedCart) {
+        const parsed = JSON.parse(savedCart);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setItems(parsed);
+        }
+      }
+      const savedClient = localStorage.getItem(CLIENT_STORAGE_KEY);
+      if (savedClient) {
+        const parsed = JSON.parse(savedClient);
+        if (parsed && typeof parsed === 'object') {
+          setClientInfo(parsed);
+        }
+      }
+    } catch {
+      // localStorage unavailable or corrupted — start fresh
+    }
+    loaded.current = true;
+  }, []);
+
+  // Save to localStorage on every change (after initial load)
+  useEffect(() => {
+    if (!loaded.current) return;
+    try {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+    } catch {
+      // localStorage full or unavailable
+    }
+  }, [items]);
+
+  useEffect(() => {
+    if (!loaded.current) return;
+    try {
+      localStorage.setItem(CLIENT_STORAGE_KEY, JSON.stringify(clientInfo));
+    } catch {
+      // localStorage full or unavailable
+    }
+  }, [clientInfo]);
 
   const activeRate = retailMode ? RETAIL_RATE : COMMISSION_RATE;
 
@@ -108,6 +154,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems([]);
     setRetailMode(false);
     setRetailPlusState(0);
+    try {
+      localStorage.removeItem(CART_STORAGE_KEY);
+      localStorage.removeItem(CLIENT_STORAGE_KEY);
+    } catch {
+      // ignore
+    }
   };
 
   const toggleRetailMode = () => {
