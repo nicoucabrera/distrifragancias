@@ -39,7 +39,7 @@ export async function GET(request: Request) {
     const minUsdt = parseFloat(url.searchParams.get('minUsdt') ?? '0');
     const minPesos = parseInt(url.searchParams.get('minPesos') ?? '0', 10);
     const limitParam = parseInt(url.searchParams.get('limit') ?? '200', 10);
-    const limit = isNaN(limitParam) ? 200 : Math.min(Math.max(limitParam, 10), 500);
+    const limit = isNaN(limitParam) ? 200 : Math.min(Math.max(limitParam, 10), 5000);
 
     const conditions: string[] = [];
     const params: Array<string | number> = [];
