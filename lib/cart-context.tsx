@@ -34,8 +34,10 @@ interface CartContextType {
   clearCart: () => void;
   setClientInfo: (info: ClientInfo) => void;
   getSubtotalPesos: () => number;
+  getCommissionPesos: () => number;
   getTotalPesos: () => number;
   getSubtotalUSDT: () => string;
+  getCommissionUSDT: () => string;
   getTotalUSDT: () => string;
   getQuoteText: () => string;
   // Saved quotes
@@ -120,8 +122,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // ── Calculations ──────────────────────────────────────────
 
   const getSubtotalPesos = () => {
+    return items.reduce((total, item) => total + item.pesos * item.quantity, 0);
+  };
+
+  const getCommissionPesos = () => {
     const base = items.reduce((total, item) => total + item.pesos * item.quantity, 0);
-    return base;
+    return Math.round(base * activeRate);
   };
 
   const getTotalPesos = () => {
@@ -135,8 +141,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const price = parseFloat(item.usdt.replace(',', '.'));
       return acc + price * item.quantity;
     }, 0);
-    const total = baseUsdt * (1 + activeRate) + (retailMode ? retailPlus / exchangeRate : 0);
-    return total.toFixed(2).replace('.', ',');
+    return baseUsdt.toFixed(2).replace('.', ',');
+  };
+
+  const getCommissionUSDT = () => {
+    const baseUsdt = items.reduce((acc, item) => {
+      const price = parseFloat(item.usdt.replace(',', '.'));
+      return acc + price * item.quantity;
+    }, 0);
+    const commission = baseUsdt * activeRate;
+    return commission.toFixed(2).replace('.', ',');
   };
 
   const getTotalUSDT = () => {
@@ -248,8 +262,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
         clearCart,
         setClientInfo,
         getSubtotalPesos,
+        getCommissionPesos,
         getTotalPesos,
         getSubtotalUSDT,
+        getCommissionUSDT,
         getTotalUSDT,
         getQuoteText,
         savedQuotes,

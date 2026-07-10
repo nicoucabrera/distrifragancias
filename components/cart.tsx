@@ -14,8 +14,10 @@ export function Cart() {
     updateQuantity,
     clearCart,
     getSubtotalPesos,
+    getCommissionPesos,
     getTotalPesos,
     getSubtotalUSDT,
+    getCommissionUSDT,
     getTotalUSDT,
     getQuoteText,
     clientInfo,
@@ -138,6 +140,19 @@ export function Cart() {
                   <span className="text-muted-foreground text-xs ml-1">({getSubtotalUSDT()} USDT)</span>
                 </div>
               </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Comision ({retailMode ? '30%' : '15%'})</span>
+                <div className="text-right">
+                  <span className="font-medium text-accent">${getCommissionPesos().toLocaleString('es-AR')}</span>
+                  <span className="text-muted-foreground text-xs ml-1">({getCommissionUSDT()} USDT)</span>
+                </div>
+              </div>
+              {retailMode && retailPlus > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Plus</span>
+                  <span className="font-medium">${retailPlus.toLocaleString('es-AR')}</span>
+                </div>
+              )}
               <div className="border-t border-border pt-2 mt-2">
                 <div className="flex justify-between">
                   <span className="font-semibold text-lg">Total</span>
