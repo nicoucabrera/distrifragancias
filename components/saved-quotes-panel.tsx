@@ -55,9 +55,9 @@ export function SavedQuotesPanel() {
 
   return (
     <div className="bg-card rounded-xl border border-border shadow-sm">
-      <div className="p-6 border-b border-border">
+      <div className="p-4 sm:p-6 border-b border-border">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+          <h2 className="text-base sm:text-lg font-semibold text-foreground flex items-center gap-2">
             <Bookmark className="w-5 h-5 text-primary" />
             Presupuestos Guardados
             {savedQuotes.length > 0 && (
@@ -97,7 +97,7 @@ export function SavedQuotesPanel() {
       ) : (
         <div className="max-h-[400px] overflow-y-auto divide-y divide-border">
           {savedQuotes.map((quote) => (
-            <div key={quote.id} className="p-4">
+            <div key={quote.id} className="p-3 sm:p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <h4 className="text-sm font-medium text-foreground truncate">

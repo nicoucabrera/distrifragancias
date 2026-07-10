@@ -35,16 +35,16 @@ export function CotizacionBadge() {
   return (
     <Popover open={open} onOpenChange={handleOpen}>
       <PopoverTrigger asChild>
-        <button className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-secondary/60 cursor-pointer">
-          <DollarSign className="h-3.5 w-3.5 text-primary" />
-          <span>
+        <button className="inline-flex items-center gap-1 sm:gap-1.5 rounded-full border border-border bg-card px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-secondary/60 cursor-pointer max-w-full">
+          <DollarSign className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary flex-shrink-0" />
+          <span className="truncate">
             Cotización:{' '}
             <span className="font-bold text-primary">
               ${rate.toLocaleString('es-AR')}
             </span>{' '}
-            ARS/USDT
+            <span className="hidden sm:inline">ARS/USDT</span>
           </span>
-          <Pencil className="h-3 w-3 text-muted-foreground ml-1" />
+          <Pencil className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-muted-foreground ml-0.5 sm:ml-1 flex-shrink-0" />
         </button>
       </PopoverTrigger>
       <PopoverContent align="center" className="w-64">

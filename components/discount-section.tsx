@@ -216,9 +216,9 @@ export function DiscountSection() {
   };
 
   return (
-    <Card className="border-accent/30 bg-accent/5">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center justify-between text-lg">
+    <Card className="border-accent/30 bg-accent/5 py-4 sm:py-6">
+      <CardHeader className="pb-3 px-4 sm:px-6">
+        <CardTitle className="flex items-center justify-between text-base sm:text-lg">
           <span className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-accent" />
             {discountedProducts.length > 0 ? 'Descuentos Activos' : 'Descuentos del Dia'}
@@ -246,7 +246,7 @@ export function DiscountSection() {
           </div>
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-4 sm:px-6">
         {discountedProducts.length === 0 ? (
           <p className="text-center text-muted-foreground py-6">
             Presiona "Sortear Descuentos" para seleccionar 10 productos aleatorios con descuentos exclusivos de 2-5 USDT

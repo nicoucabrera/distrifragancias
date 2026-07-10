@@ -22,7 +22,7 @@ export function ClientForm() {
   };
 
   return (
-    <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
+    <div className="bg-card rounded-xl border border-border p-4 sm:p-6 shadow-sm">
       <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
         <User className="w-5 h-5 text-primary" />
         Datos del Cliente

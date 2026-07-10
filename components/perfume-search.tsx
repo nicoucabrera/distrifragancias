@@ -315,13 +315,13 @@ export function PerfumeSearch() {
 
   return (
     <div className="bg-card rounded-xl border border-border shadow-sm">
-      <div className="p-6 border-b border-border">
-        <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+      <div className="p-4 sm:p-6 border-b border-border">
+        <h2 className="text-lg font-semibold text-foreground mb-3 sm:mb-4 flex items-center gap-2">
           <Search className="w-5 h-5 text-primary" />
           Buscador de Perfumes
         </h2>
         
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -340,12 +340,12 @@ export function PerfumeSearch() {
             )}
           </div>
           
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
             <Button
               variant="secondary"
               size="sm"
               onClick={openNewProduct}
-              className="gap-2"
+              className="gap-1.5 text-xs sm:text-sm"
             >
               <Plus className="w-4 h-4" />
               Agregar producto manual
@@ -354,16 +354,17 @@ export function PerfumeSearch() {
               variant="default"
               size="sm"
               onClick={openPriceUpdate}
-              className="gap-2"
+              className="gap-1.5 text-xs sm:text-sm"
             >
-              <RefreshCw className="w-4 h-4" />
-              Actualizar precios
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span className="hidden xs:inline">Actualizar precios</span>
+              <span className="xs:hidden">Precios</span>
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => setShowFilters(!showFilters)}
-              className="gap-2"
+              className="gap-1.5 text-xs sm:text-sm"
             >
               <Filter className="w-4 h-4" />
               Filtrar por marca

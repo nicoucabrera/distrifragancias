@@ -48,9 +48,9 @@ export function Cart() {
 
   return (
     <div className="bg-card rounded-xl border border-border shadow-sm">
-      <div className="p-6 border-b border-border">
+      <div className="p-4 sm:p-6 border-b border-border">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+          <h2 className="text-base sm:text-lg font-semibold text-foreground flex items-center gap-2">
             <ShoppingCart className="w-5 h-5 text-primary" />
             Carrito
             {items.length > 0 && (
@@ -82,7 +82,7 @@ export function Cart() {
         <>
           <div className="max-h-[300px] overflow-y-auto divide-y divide-border">
             {items.map(item => (
-              <div key={item.id} className="p-4">
+              <div key={item.id} className="p-3 sm:p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <Badge variant="outline" className="mb-1 text-xs">
@@ -131,7 +131,7 @@ export function Cart() {
             ))}
           </div>
 
-          <div className="p-6 bg-secondary/30 border-t border-border">
+          <div className="p-4 sm:p-6 bg-secondary/30 border-t border-border">
             <div className="space-y-2 mb-4">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Subtotal ({items.reduce((acc, item) => acc + item.quantity, 0)} productos)</span>
