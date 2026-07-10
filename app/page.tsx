@@ -4,6 +4,7 @@ import { ClientForm } from '@/components/client-form';
 import { DiscountSection } from '@/components/discount-section';
 import { PerfumeSearch } from '@/components/perfume-search';
 import { Cart } from '@/components/cart';
+import { SavedQuotesPanel } from '@/components/saved-quotes-panel';
 import { CotizacionBadge } from '@/components/cotizacion-badge';
 import { Sparkles } from 'lucide-react';
 
@@ -47,8 +48,9 @@ export default function Home() {
 
             {/* Right Column - Cart */}
             <div className="lg:col-span-1">
-              <div className="lg:sticky lg:top-24">
+              <div className="lg:sticky lg:top-24 space-y-6">
                 <Cart />
+                <SavedQuotesPanel />
               </div>
             </div>
           </div>

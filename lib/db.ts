@@ -6,7 +6,7 @@ const pool = mysql.createPool({
   password: process.env.MYSQL_PASSWORD || 'fkSEFdX9Di',
   database: process.env.MYSQL_DATABASE || 'sql10822633',
   waitForConnections: true,
-  connectionLimit: 3,
+  connectionLimit: 2,
   queueLimit: 0,
   enableKeepAlive: true,
   keepAliveInitialDelay: 10000,
@@ -37,7 +37,10 @@ export async function queryWithRetry<T = any>(
   throw lastError;
 }
 
+const ensuredTables = new Set<string>();
+
 export async function ensurePerfumesTable() {
+  if (ensuredTables.has('PERFUMES')) return;
   await pool.query(`
     CREATE TABLE IF NOT EXISTS PERFUMES (
       marca VARCHAR(255) NOT NULL,
@@ -48,9 +51,11 @@ export async function ensurePerfumesTable() {
       INDEX idx_marca (marca(255))
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
+  ensuredTables.add('PERFUMES');
 }
 
 export async function ensureWinnersTable() {
+  if (ensuredTables.has('discounted_winners')) return;
   await pool.query(`
     CREATE TABLE IF NOT EXISTS discounted_winners (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -85,6 +90,22 @@ export async function ensureWinnersTable() {
   if (!Array.isArray(manualColumns) || manualColumns.length === 0) {
     await pool.query('ALTER TABLE discounted_winners ADD COLUMN is_manual BOOLEAN NOT NULL DEFAULT FALSE');
   }
+  ensuredTables.add('discounted_winners');
+}
+
+export async function ensureSavedQuotesTable() {
+  if (ensuredTables.has('saved_quotes')) return;
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS saved_quotes (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      client_name VARCHAR(255) NOT NULL,
+      items TEXT NOT NULL,
+      client_tel VARCHAR(64) DEFAULT '',
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_client_name (client_name)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+  ensuredTables.add('saved_quotes');
 }
 
 export { pool };
