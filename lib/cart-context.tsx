@@ -82,7 +82,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const removeFromCart = (id: string | number) => {
-    setItems(prev => prev.filter(item => item.id !== id));
+    setItems(prev => {
+      const next = prev.filter(item => item.id !== id);
+      if (next.length === 0) {
+        setRetailMode(false);
+        setRetailPlusState(0);
+      }
+      return next;
+    });
   };
 
   const updateQuantity = (id: string | number, quantity: number) => {
@@ -97,6 +104,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const clearCart = () => {
     setItems([]);
+    setRetailMode(false);
+    setRetailPlusState(0);
   };
 
   const toggleRetailMode = () => {
