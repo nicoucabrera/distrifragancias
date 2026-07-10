@@ -294,6 +294,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
     
     text += `────────────────────────\n`;
+    text += `Subtotal: $${getSubtotalPesos().toLocaleString('es-AR')} (${getSubtotalUSDT()} USDT)\n`;
+    text += `Comisión (${retailMode ? '30%' : '15%'}): $${getCommissionPesos().toLocaleString('es-AR')} (${getCommissionUSDT()} USDT)\n`;
+    if (retailMode && retailPlus > 0) {
+      text += `Plus: $${retailPlus.toLocaleString('es-AR')}\n`;
+    }
+    text += `────────────────────────\n`;
     text += `TOTAL: $${getTotalPesos().toLocaleString('es-AR')}\n`;
     text += `TOTAL USDT: ${getTotalUSDT()}\n`;
     text += `━━━━━━━━━━━━━━━━━━━━━━\n`;

@@ -10,7 +10,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Perfume } from '@/lib/types';
 import { useCart } from '@/lib/cart-context';
 import { useRate } from '@/lib/rate-context';
-import { Search, Plus, ShoppingCart, Filter, X, Pencil, RefreshCw, Tag } from 'lucide-react';
+import { Search, Plus, ShoppingCart, Filter, X, Pencil, RefreshCw, Tag, Download } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 export function PerfumeSearch() {
   const [search, setSearch] = useState('');
@@ -32,6 +34,7 @@ export function PerfumeSearch() {
   const [discountAmount, setDiscountAmount] = useState('');
   const [addingDiscount, setAddingDiscount] = useState(false);
   const [discountError, setDiscountError] = useState<string | null>(null);
+  const [generatingPdf, setGeneratingPdf] = useState(false);
   const [form, setForm] = useState<{
     id?: string | number;
     marca: string;
@@ -313,13 +316,108 @@ export function PerfumeSearch() {
     addToCart(perfume);
   };
 
+  const handleDownloadPdf = async () => {
+    setGeneratingPdf(true);
+    try {
+      // Fetch ALL perfumes (no filters, high limit)
+      const response = await fetch('/api/perfumes?limit=10000', { cache: 'no-store' });
+      if (!response.ok) throw new Error('Error al cargar los productos');
+      const data = await response.json();
+      const allPerfumes: Perfume[] = Array.isArray(data) ? data : [];
+
+      if (allPerfumes.length === 0) {
+        return;
+      }
+
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+      // Header
+      doc.setFontSize(18);
+      doc.setTextColor(30, 30, 30);
+      doc.text('Catálogo de Perfumes', 14, 15);
+
+      doc.setFontSize(10);
+      doc.setTextColor(120, 120, 120);
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      doc.text(`Fecha: ${dateStr}  |  Total: ${allPerfumes.length} productos`, 14, 22);
+
+      // Table
+      const tableData = allPerfumes.map((p) => [
+        p.marca,
+        p.nombre,
+        `USDT ${p.usdt}`,
+        `$${p.pesos.toLocaleString('es-AR')}`,
+      ]);
+
+      autoTable(doc, {
+        startY: 28,
+        head: [['Marca', 'Nombre', 'USDT', 'Pesos']],
+        body: tableData,
+        styles: {
+          fontSize: 8,
+          cellPadding: 3,
+          textColor: [30, 30, 30],
+          lineColor: [200, 200, 200],
+          lineWidth: 0.1,
+        },
+        headStyles: {
+          fillColor: [50, 50, 50],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+          fontSize: 9,
+        },
+        alternateRowStyles: {
+          fillColor: [245, 245, 245],
+        },
+        columnStyles: {
+          0: { cellWidth: 45 },
+          1: { cellWidth: 'auto' },
+          2: { cellWidth: 30, halign: 'right' },
+          3: { cellWidth: 35, halign: 'right' },
+        },
+        margin: { left: 14, right: 14 },
+        didDrawPage: (data) => {
+          // Footer on each page
+          const pageCount = doc.getNumberOfPages();
+          doc.setFontSize(8);
+          doc.setTextColor(150, 150, 150);
+          doc.text(
+            `Página ${data.pageNumber} de ${pageCount}`,
+            doc.internal.pageSize.getWidth() / 2,
+            doc.internal.pageSize.getHeight() - 8,
+            { align: 'center' }
+          );
+        },
+      });
+
+      doc.save(`catalogo-perfumes-${dateStr.replace(/\//g, '-')}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+    } finally {
+      setGeneratingPdf(false);
+    }
+  };
+
   return (
     <div className="bg-card rounded-xl border border-border shadow-sm">
       <div className="p-4 sm:p-6 border-b border-border">
-        <h2 className="text-lg font-semibold text-foreground mb-3 sm:mb-4 flex items-center gap-2">
-          <Search className="w-5 h-5 text-primary" />
-          Buscador de Perfumes
-        </h2>
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
+          <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+            <Search className="w-5 h-5 text-primary" />
+            Buscador de Perfumes
+          </h2>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDownloadPdf}
+            disabled={generatingPdf}
+            className="gap-1.5 text-xs sm:text-sm"
+          >
+            <Download className="w-4 h-4" />
+            {generatingPdf ? 'Generando...' : 'Descargar PDF'}
+          </Button>
+        </div>
         
         <div className="space-y-3 sm:space-y-4">
           <div className="relative">
