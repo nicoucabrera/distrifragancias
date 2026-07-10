@@ -19,9 +19,15 @@ tsconfig.tsbuildinfo
 
 # Logs
 *.log
+dev-server.err.log
 
 # Test artifacts
 test-results/
 
 # Temporary files
 tmp-*
+
+# Debug scripts
+check-table-structure.js
+parse-sql.js
+test-db-connection.js
