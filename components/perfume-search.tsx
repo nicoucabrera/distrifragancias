@@ -80,7 +80,7 @@ export function PerfumeSearch() {
 
   const openNewProduct = () => {
     setIsEditing(false);
-    setForm({ marca: '', nombre: '', usdt: '', pesos: '', saveToDb: false });
+    setForm({ marca: '', nombre: '', usdt: '', pesos: '', saveToDb: true });
     setErrorMessage(null);
     setOpenDialog(true);
   };
@@ -295,11 +295,15 @@ export function PerfumeSearch() {
         throw new Error(`Failed to load perfumes: ${response.status}`);
       }
       const data = await response.json();
-      // Generate unique IDs if not present
-      const perfumesWithIds = (Array.isArray(data) ? data : []).map((p: any, index: number) => ({
-        ...p,
-        id: p.id ?? `${p.marca}-${p.nombre}`.toLowerCase().replace(/\s+/g, '-')
-      }));
+      // Generate unique IDs if not present and deduplicate by id
+      const seen = new Set<string | number>();
+      const perfumesWithIds = (Array.isArray(data) ? data : []).reduce<Perfume[]>((acc, p: any) => {
+        const id = p.id ?? `${p.marca}-${p.nombre}`.toLowerCase().replace(/\s+/g, '-');
+        if (seen.has(id)) return acc;
+        seen.add(id);
+        acc.push({ ...p, id });
+        return acc;
+      }, []);
       setPerfumes(perfumesWithIds);
     } catch (error) {
       console.error('Error loading perfumes:', error);
