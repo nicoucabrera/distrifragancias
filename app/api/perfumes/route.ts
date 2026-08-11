@@ -40,6 +40,8 @@ export async function GET(request: Request) {
     const minPesos = parseInt(url.searchParams.get('minPesos') ?? '0', 10);
     const limitParam = parseInt(url.searchParams.get('limit') ?? '200', 10);
     const limit = isNaN(limitParam) ? 200 : Math.min(Math.max(limitParam, 10), 5000);
+    const offsetParam = parseInt(url.searchParams.get('offset') ?? '0', 10);
+    const offset = isNaN(offsetParam) ? 0 : Math.max(offsetParam, 0);
 
     const conditions: string[] = [];
     const params: Array<string | number> = [];
@@ -66,8 +68,8 @@ export async function GET(request: Request) {
 
     const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
     const selectColumns = hasId ? 'id, ' : '';
-    const query = `SELECT ${selectColumns}MARCA as marca, NOMBRE as nombre, USDT as usdt, PESOS as pesos FROM PERFUMES ${whereClause} ORDER BY MARCA, NOMBRE LIMIT ?`;
-    params.push(limit);
+    const query = `SELECT ${selectColumns}MARCA as marca, NOMBRE as nombre, USDT as usdt, PESOS as pesos FROM PERFUMES ${whereClause} ORDER BY MARCA, NOMBRE LIMIT ? OFFSET ?`;
+    params.push(limit, offset);
 
     const [rows] = await pool.query(query, params);
     const perfumes = (rows as Array<{ id?: number | string; marca: string; nombre: string; usdt: string; pesos: number }>).map((perfume) => ({

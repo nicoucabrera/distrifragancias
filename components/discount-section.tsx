@@ -8,6 +8,7 @@ import { Sparkles, RefreshCw, ShoppingCart, Minus, X, Tag } from 'lucide-react';
 import { Perfume, DiscountedPerfume } from '@/lib/types';
 import { useCart } from '@/lib/cart-context';
 import { useRate } from '@/lib/rate-context';
+import { authFetch } from '@/lib/auth-client';
 
 export function DiscountSection() {
   const [discountedProducts, setDiscountedProducts] = useState<DiscountedPerfume[]>([]);
@@ -71,7 +72,7 @@ export function DiscountSection() {
   };
 
   const updateDiscountQuantity = async (productId: string | number, quantity: number) => {
-    const response = await fetch('/api/discounted-products', {
+    const response = await authFetch('/api/discounted-products', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ productId, quantity }),
@@ -127,7 +128,7 @@ export function DiscountSection() {
         return applyDiscount(perfume, discounts[index], Math.floor(Math.random() * 14) + 2);
       });
 
-      const response = await fetch('/api/discounted-products', {
+      const response = await authFetch('/api/discounted-products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(discounted),
@@ -152,7 +153,7 @@ export function DiscountSection() {
 
   const clearDiscounts = async () => {
     try {
-      const response = await fetch('/api/discounted-products?all=true', { method: 'DELETE' });
+      const response = await authFetch('/api/discounted-products?all=true', { method: 'DELETE' });
       if (!response.ok) {
         const body = await response.text();
         throw new Error(`Failed to clear discounts: ${response.status} ${body}`);
@@ -165,7 +166,7 @@ export function DiscountSection() {
 
   const removeManualDiscount = async (productId: string | number) => {
     try {
-      const response = await fetch(`/api/discounted-products?productId=${encodeURIComponent(productId.toString())}`, {
+      const response = await authFetch(`/api/discounted-products?productId=${encodeURIComponent(productId.toString())}`, {
         method: 'DELETE',
       });
       if (!response.ok) {

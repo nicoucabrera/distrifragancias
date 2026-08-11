@@ -3,6 +3,8 @@
 import { createContext, useContext, useState, useEffect, useRef, useCallback, ReactNode } from 'react';
 import { Perfume } from '@/lib/types';
 import { useRate } from '@/lib/rate-context';
+import { authFetch } from '@/lib/auth-client';
+import { calculatePrices, generateQuoteText, formatUsdt } from '@/lib/price-utils';
 
 const CART_STORAGE_KEY = 'distrifragancias-cart';
 const CLIENT_STORAGE_KEY = 'distrifragancias-client';
@@ -171,48 +173,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setRetailPlusState(plus);
   };
 
-  // ── Calculations ──────────────────────────────────────────
+  // ── Calculations (delegates to price-utils) ────────────────
 
-  const getSubtotalPesos = () => {
-    return items.reduce((total, item) => total + item.pesos * item.quantity, 0);
-  };
+  const getPrices = () => calculatePrices(items, activeRate, retailMode ? retailPlus : 0);
 
-  const getCommissionPesos = () => {
-    const base = items.reduce((total, item) => total + item.pesos * item.quantity, 0);
-    return Math.round(base * activeRate);
-  };
-
-  const getTotalPesos = () => {
-    const base = items.reduce((total, item) => total + item.pesos * item.quantity, 0);
-    const commission = Math.round(base * activeRate);
-    return base + commission + (retailMode ? retailPlus : 0);
-  };
-
-  const getSubtotalUSDT = () => {
-    const baseUsdt = items.reduce((acc, item) => {
-      const price = parseFloat(item.usdt.replace(',', '.'));
-      return acc + price * item.quantity;
-    }, 0);
-    return baseUsdt.toFixed(2).replace('.', ',');
-  };
-
-  const getCommissionUSDT = () => {
-    const baseUsdt = items.reduce((acc, item) => {
-      const price = parseFloat(item.usdt.replace(',', '.'));
-      return acc + price * item.quantity;
-    }, 0);
-    const commission = baseUsdt * activeRate;
-    return commission.toFixed(2).replace('.', ',');
-  };
-
-  const getTotalUSDT = () => {
-    const baseUsdt = items.reduce((acc, item) => {
-      const price = parseFloat(item.usdt.replace(',', '.'));
-      return acc + price * item.quantity;
-    }, 0);
-    const total = baseUsdt * (1 + activeRate) + (retailMode ? retailPlus / exchangeRate : 0);
-    return total.toFixed(2).replace('.', ',');
-  };
+  const getSubtotalPesos = () => getPrices().subtotalPesos;
+  const getCommissionPesos = () => getPrices().commissionPesos;
+  const getTotalPesos = () => getPrices().totalPesos;
+  const getSubtotalUSDT = () => formatUsdt(getPrices().subtotalUsdt);
+  const getCommissionUSDT = () => formatUsdt(getPrices().commissionUsdt);
+  const getTotalUSDT = () => formatUsdt(getPrices().totalUsdt + (retailMode ? retailPlus / exchangeRate : 0));
 
   // ── Saved Quotes ──────────────────────────────────────────
 
@@ -232,7 +202,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (items.length === 0) return false;
     const name = clientInfo.nombre || 'Sin nombre';
     try {
-      const res = await fetch('/api/saved-quotes', {
+      const res = await authFetch('/api/saved-quotes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -259,53 +229,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const deleteQuote = useCallback(async (id: number) => {
     try {
-      await fetch(`/api/saved-quotes?id=${id}`, { method: 'DELETE' });
+      await authFetch(`/api/saved-quotes?id=${id}`, { method: 'DELETE' });
       await loadSavedQuotes();
     } catch (error) {
       console.error('Failed to delete quote:', error);
     }
   }, [loadSavedQuotes]);
 
-  // ── Quote Text ────────────────────────────────────────────
+  // ── Quote Text (delegates to price-utils) ──────────────────
 
   const getQuoteText = () => {
-    const date = new Date().toLocaleDateString('es-AR');
-    let text = `━━━━━━━━━━━━━━━━━━━━━━\n`;
-    text += `DISTRIFRAGANCIAS\n`;
-    text += `━━━━━━━━━━━━━━━━━━━━━━\n\n`;
-    text += `Fecha: ${date}\n`;
-    
-    if (clientInfo.nombre || clientInfo.tel) {
-      text += `\nDATOS DEL CLIENTE:\n`;
-      if (clientInfo.nombre) text += `   Nombre: ${clientInfo.nombre}\n`;
-      if (clientInfo.tel) text += `   Tel: ${clientInfo.tel}\n`;
-    }
-    
-    text += `\nDETALLE DEL PEDIDO:\n`;
-    text += `────────────────────────\n`;
-    
-    items.forEach((item, index) => {
-      const subtotalPesos = item.pesos * item.quantity;
-      const subtotalUsdt = (parseFloat(item.usdt.replace(',', '.')) * item.quantity).toFixed(2).replace('.', ',');
-      text += `${index + 1}. ${item.marca}\n`;
-      text += `   ${item.nombre}\n`;
-      text += `   Cant: ${item.quantity} x $${item.pesos.toLocaleString('es-AR')}\n`;
-      text += `   Subtotal: $${subtotalPesos.toLocaleString('es-AR')} (${subtotalUsdt} USDT)\n\n`;
-    });
-    
-    text += `────────────────────────\n`;
-    text += `Subtotal: $${getSubtotalPesos().toLocaleString('es-AR')} (${getSubtotalUSDT()} USDT)\n`;
-    text += `Comisión (${retailMode ? '30%' : '15%'}): $${getCommissionPesos().toLocaleString('es-AR')} (${getCommissionUSDT()} USDT)\n`;
-    if (retailMode && retailPlus > 0) {
-      text += `Plus: $${retailPlus.toLocaleString('es-AR')}\n`;
-    }
-    text += `────────────────────────\n`;
-    text += `TOTAL: $${getTotalPesos().toLocaleString('es-AR')}\n`;
-    text += `TOTAL USDT: ${getTotalUSDT()}\n`;
-    text += `━━━━━━━━━━━━━━━━━━━━━━\n`;
-    text += `Gracias por su compra!\n`;
-    
-    return text;
+    return generateQuoteText(items, clientInfo, activeRate, retailMode ? retailPlus : 0);
   };
 
   return (
