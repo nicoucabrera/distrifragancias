@@ -84,6 +84,12 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      if (res.status === 503) {
+        setError('La contraseña no está configurada en el servidor.');
+        setLoading(false);
+        return;
+      }
+
       setAdminPassword(password);
       setIsAdmin(true);
       closeLogin();
