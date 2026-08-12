@@ -9,11 +9,13 @@ import { Perfume, DiscountedPerfume } from '@/lib/types';
 import { useCart } from '@/lib/cart-context';
 import { useRate } from '@/lib/rate-context';
 import { authFetch } from '@/lib/auth-client';
+import { useAdmin } from '@/lib/admin-context';
 
 export function DiscountSection() {
   const [discountedProducts, setDiscountedProducts] = useState<DiscountedPerfume[]>([]);
   const { addToCart } = useCart();
   const { rate } = useRate();
+  const { requireAdmin } = useAdmin();
 
   useEffect(() => {
     async function loadDiscounts() {
@@ -72,6 +74,9 @@ export function DiscountSection() {
   };
 
   const updateDiscountQuantity = async (productId: string | number, quantity: number) => {
+    const ok = await requireAdmin();
+    if (!ok) return false;
+
     const response = await authFetch('/api/discounted-products', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -88,6 +93,8 @@ export function DiscountSection() {
   };
 
   const generateDiscounts = async () => {
+    const ok = await requireAdmin();
+    if (!ok) return;
     try {
       const validPerfumes = (await loadValidPerfumes()).filter((perfume) => perfume.pesos >= 35000);
       if (validPerfumes.length < 10) {
@@ -152,6 +159,9 @@ export function DiscountSection() {
   };
 
   const clearDiscounts = async () => {
+    const ok = await requireAdmin();
+    if (!ok) return;
+
     try {
       const response = await authFetch('/api/discounted-products?all=true', { method: 'DELETE' });
       if (!response.ok) {
@@ -165,6 +175,9 @@ export function DiscountSection() {
   };
 
   const removeManualDiscount = async (productId: string | number) => {
+    const ok = await requireAdmin();
+    if (!ok) return;
+
     try {
       const response = await authFetch(`/api/discounted-products?productId=${encodeURIComponent(productId.toString())}`, {
         method: 'DELETE',

@@ -8,6 +8,7 @@ import { Search, Plus, ShoppingCart, Filter, X, Pencil, RefreshCw, Tag, Download
 import { Perfume } from '@/lib/types';
 import { useCart } from '@/lib/cart-context';
 import { useRate } from '@/lib/rate-context';
+import { useAdmin } from '@/lib/admin-context';
 import { normalizeUsdt } from '@/lib/price-utils';
 import { ProductFormDialog } from '@/components/product-form-dialog';
 import { PriceUpdateDialog } from '@/components/price-update-dialog';
@@ -34,6 +35,7 @@ export function PerfumeSearch() {
 
   const { addToCart, items } = useCart();
   const { rate } = useRate();
+  const { requireAdmin } = useAdmin();
 
   const loadPerfumes = useCallback(async () => {
     try {
@@ -90,19 +92,31 @@ export function PerfumeSearch() {
     return items.find((i) => i.id === id)?.quantity || 0;
   };
 
-  const openNewProduct = () => {
+  const openNewProduct = async () => {
+    const ok = await requireAdmin();
+    if (!ok) return;
     setEditingPerfume(null);
     setProductDialogOpen(true);
   };
 
-  const openEditProduct = (perfume: Perfume) => {
+  const openEditProduct = async (perfume: Perfume) => {
+    const ok = await requireAdmin();
+    if (!ok) return;
     setEditingPerfume(perfume);
     setProductDialogOpen(true);
   };
 
-  const openDiscount = (perfume: Perfume) => {
+  const openDiscount = async (perfume: Perfume) => {
+    const ok = await requireAdmin();
+    if (!ok) return;
     setDiscountPerfume(perfume);
     setDiscountDialogOpen(true);
+  };
+
+  const openPriceUpdate = async () => {
+    const ok = await requireAdmin();
+    if (!ok) return;
+    setPriceDialogOpen(true);
   };
 
   const handleDownloadPdf = async () => {
@@ -194,7 +208,7 @@ export function PerfumeSearch() {
               <Plus className="w-4 h-4" />
               Agregar producto manual
             </Button>
-            <Button variant="default" size="sm" onClick={() => setPriceDialogOpen(true)} className="gap-1.5 text-xs sm:text-sm">
+            <Button variant="default" size="sm" onClick={openPriceUpdate} className="gap-1.5 text-xs sm:text-sm">
               <RefreshCw className="w-3.5 h-3.5" />
               Precios
             </Button>

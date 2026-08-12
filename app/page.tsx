@@ -1,5 +1,6 @@
 import { CartProvider } from '@/lib/cart-context';
 import { RateProvider } from '@/lib/rate-context';
+import { AdminProvider } from '@/lib/admin-context';
 import { ClientForm } from '@/components/client-form';
 import { DiscountSection } from '@/components/discount-section';
 import { PerfumeSearch } from '@/components/perfume-search';
@@ -13,6 +14,7 @@ export default function Home() {
   return (
     <RateProvider>
     <CartProvider>
+    <AdminProvider>
       <div className="min-h-screen bg-background">
         {/* Header */}
         <header className="bg-card border-b border-border sticky top-0 z-50">
@@ -69,6 +71,7 @@ export default function Home() {
           </div>
         </footer>
       </div>
+    </AdminProvider>
     </CartProvider>
     </RateProvider>
   );
