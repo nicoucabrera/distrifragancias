@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -48,6 +48,22 @@ export function ProductFormDialog({
   });
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isEditing && perfume) {
+      setForm({
+        id: perfume.id,
+        marca: perfume.marca,
+        nombre: perfume.nombre,
+        usdt: perfume.usdt,
+        pesos: String(perfume.pesos),
+        saveToDb: true,
+      });
+    } else {
+      setForm({ ...EMPTY_FORM });
+    }
+    setErrorMessage(null);
+  }, [isEditing, perfume]);
 
   const handleFormChange = (field: keyof typeof form, value: string | boolean) => {
     setForm((prev) => ({ ...prev, [field]: value }));
