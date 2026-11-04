@@ -7,6 +7,33 @@
 
 const AUTH_STORAGE_KEY = 'distrifragancias-admin-auth';
 
+export async function readApiError(response: Response, fallback: string): Promise<Error> {
+  const text = await response.text();
+
+  if (!text) {
+    return new Error(fallback);
+  }
+
+  try {
+    const parsed = JSON.parse(text);
+    if (parsed && typeof parsed.error === 'string' && parsed.error.trim()) {
+      return new Error(parsed.error);
+    }
+  } catch {
+    // Ignore parse failures; fall back to raw text.
+  }
+
+  if (response.status === 401) {
+    return new Error('No autorizado. Iniciá sesión como admin.');
+  }
+
+  if (response.status === 403) {
+    return new Error('Contraseña incorrecta.');
+  }
+
+  return new Error(text);
+}
+
 function getStoredAuth(): string | null {
   try {
     return localStorage.getItem(AUTH_STORAGE_KEY);
@@ -49,8 +76,8 @@ export async function authFetch(
 
   const response = await fetch(url, { ...options, headers });
 
-  // If 401, clear stale auth
-  if (response.status === 401) {
+  // If auth is invalid or stale, clear it so the user must log in again.
+  if (response.status === 401 || response.status === 403) {
     clearAdminPassword();
   }
 

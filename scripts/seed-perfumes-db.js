@@ -16,7 +16,7 @@ async function main() {
   }
 
   const perfumes = JSON.parse(match[1]);
-  const requiredEnv = ['MYSQL_HOST', 'MYSQL_USER', 'MYSQL_PASSWORD', 'MYSQL_DATABASE'];
+  const requiredEnv = ['MYSQL_HOST', 'MYSQL_USER', 'MYSQL_PASSWORD'];
   const missingEnv = requiredEnv.filter((key) => !process.env[key]);
   if (missingEnv.length > 0) {
     throw new Error(`Faltan variables de entorno para la DB: ${missingEnv.join(', ')}`);
@@ -27,7 +27,7 @@ async function main() {
     port: Number(process.env.MYSQL_PORT || 3306),
     user: process.env.MYSQL_USER,
     password: process.env.MYSQL_PASSWORD,
-    database: process.env.MYSQL_DATABASE,
+    database: process.env.MYSQL_DATABASE || 'defaultdb',
     ssl: String(process.env.MYSQL_SSL || '').toLowerCase() === 'true' ? { rejectUnauthorized: false } : undefined,
     waitForConnections: true,
     connectionLimit: 5,

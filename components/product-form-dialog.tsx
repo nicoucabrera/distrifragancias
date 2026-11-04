@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Perfume } from '@/lib/types';
 import { validateProductForm, normalizeUsdt, ProductFormData } from '@/lib/price-utils';
-import { authFetch } from '@/lib/auth-client';
+import { authFetch, readApiError } from '@/lib/auth-client';
 
 interface ProductFormDialogProps {
   open: boolean;
@@ -95,8 +95,7 @@ export function ProductFormDialog({
         });
 
         if (!response.ok) {
-          const body = await response.json();
-          throw new Error(body?.error || 'Error al actualizar el producto.');
+          throw await readApiError(response, 'Error al actualizar el producto.');
         }
       } else if (form.saveToDb) {
         const response = await authFetch('/api/perfumes', {
@@ -106,8 +105,7 @@ export function ProductFormDialog({
         });
 
         if (!response.ok) {
-          const body = await response.json();
-          throw new Error(body?.error || 'Error al guardar el producto.');
+          throw await readApiError(response, 'Error al guardar el producto.');
         }
       }
 

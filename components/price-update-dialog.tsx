@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { parseUsdt } from '@/lib/price-utils';
-import { authFetch } from '@/lib/auth-client';
+import { authFetch, readApiError } from '@/lib/auth-client';
 
 interface PriceUpdateDialogProps {
   open: boolean;
@@ -45,8 +45,7 @@ export function PriceUpdateDialog({
       });
 
       if (!response.ok) {
-        const body = await response.json();
-        throw new Error(body?.error || 'Error al actualizar los precios.');
+        throw await readApiError(response, 'Error al actualizar los precios.');
       }
 
       const result = await response.json();

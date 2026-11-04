@@ -95,20 +95,26 @@ export function middleware(request: NextRequest) {
   // Check Basic Auth header
   const authHeader = request.headers.get('authorization');
   if (!authHeader || !authHeader.startsWith('Basic ')) {
-    return new NextResponse('Unauthorized', {
-      status: 401,
-      headers: { 'WWW-Authenticate': 'Basic realm="Admin"' },
-    });
+    return NextResponse.json(
+      { error: 'No autorizado. Iniciá sesión como admin.' },
+      {
+        status: 401,
+        headers: { 'WWW-Authenticate': 'Basic realm="Admin"' },
+      },
+    );
   }
 
   const decoded = atob(authHeader.slice(6));
   const [, password] = decoded.split(':');
 
   if (password !== ADMIN_PASSWORD) {
-    return new NextResponse('Forbidden', {
-      status: 403,
-      headers: { 'WWW-Authenticate': 'Basic realm="Admin"' },
-    });
+    return NextResponse.json(
+      { error: 'Contraseña incorrecta.' },
+      {
+        status: 403,
+        headers: { 'WWW-Authenticate': 'Basic realm="Admin"' },
+      },
+    );
   }
 
   const response = NextResponse.next();

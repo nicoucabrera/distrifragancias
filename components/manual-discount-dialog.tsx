@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Tag } from 'lucide-react';
 import { Perfume } from '@/lib/types';
 import { parseUsdt, formatUsdt, calculateDiscount, validateDiscount } from '@/lib/price-utils';
-import { authFetch } from '@/lib/auth-client';
+import { authFetch, readApiError } from '@/lib/auth-client';
 
 interface ManualDiscountDialogProps {
   open: boolean;
@@ -70,8 +70,7 @@ export function ManualDiscountDialog({
       });
 
       if (!response.ok) {
-        const body = await response.json();
-        throw new Error(body?.error || 'No se pudo agregar el descuento.');
+        throw await readApiError(response, 'No se pudo agregar el descuento.');
       }
 
       onSaved();

@@ -78,7 +78,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         }),
       });
 
-      if (res.status === 401) {
+      if (res.status === 401 || res.status === 403) {
         setError('Contraseña incorrecta.');
         setLoading(false);
         return;
