@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { pool, queryWithRetry } from '@/lib/db';
+import { pool, queryWithRetry, ensurePerfumesTable } from '@/lib/db';
 
 function normalizeUsdt(value: string) {
   const parsed = parseFloat(value.replace(',', '.'));
@@ -32,6 +32,7 @@ function getIdFromBody(body: any) {
 
 export async function GET(request: Request) {
   try {
+    await ensurePerfumesTable();
     const hasId = await tableHasIdColumn();
     const url = new URL(request.url);
     const search = url.searchParams.get('search')?.trim() ?? '';
@@ -89,6 +90,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    await ensurePerfumesTable();
     const hasId = await tableHasIdColumn();
     const body = await request.json();
     const marca = String(body.marca || '').trim();
@@ -124,6 +126,7 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
+    await ensurePerfumesTable();
     const body = await request.json();
     const factor = parseFloat(String(body.factor).replace(',', '.'));
 
@@ -147,6 +150,7 @@ export async function PATCH(request: Request) {
 
 export async function PUT(request: Request) {
   try {
+    await ensurePerfumesTable();
     const hasId = await tableHasIdColumn();
     const body = await request.json();
     const rawId = getIdFromBody(body);

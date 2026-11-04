@@ -56,6 +56,12 @@ export async function ensurePerfumesTable() {
       INDEX idx_marca (marca(255))
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
+
+  const [idColumns] = await pool.query("SHOW COLUMNS FROM PERFUMES LIKE 'id'");
+  if (!Array.isArray(idColumns) || idColumns.length === 0) {
+    await pool.query('ALTER TABLE PERFUMES ADD COLUMN id INT NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST');
+  }
+
   ensuredTables.add('PERFUMES');
 }
 

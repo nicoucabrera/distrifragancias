@@ -16,12 +16,18 @@ async function main() {
   }
 
   const perfumes = JSON.parse(match[1]);
+  const requiredEnv = ['MYSQL_HOST', 'MYSQL_USER', 'MYSQL_PASSWORD', 'MYSQL_DATABASE'];
+  const missingEnv = requiredEnv.filter((key) => !process.env[key]);
+  if (missingEnv.length > 0) {
+    throw new Error(`Faltan variables de entorno para la DB: ${missingEnv.join(', ')}`);
+  }
+
   const pool = await mysql.createPool({
-    host: process.env.MYSQL_HOST || 'sql10.freesqldatabase.com',
+    host: process.env.MYSQL_HOST,
     port: Number(process.env.MYSQL_PORT || 3306),
-    user: process.env.MYSQL_USER || 'sql10822633',
-    password: process.env.MYSQL_PASSWORD || 'fkSEFdX9Di',
-    database: process.env.MYSQL_DATABASE || 'sql10822633',
+    user: process.env.MYSQL_USER,
+    password: process.env.MYSQL_PASSWORD,
+    database: process.env.MYSQL_DATABASE,
     ssl: String(process.env.MYSQL_SSL || '').toLowerCase() === 'true' ? { rejectUnauthorized: false } : undefined,
     waitForConnections: true,
     connectionLimit: 5,
