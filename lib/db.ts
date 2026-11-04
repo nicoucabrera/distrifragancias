@@ -1,10 +1,15 @@
 import mysql from 'mysql2/promise';
 
+const mysqlPort = Number(process.env.MYSQL_PORT ?? 3306);
+const useSSL = String(process.env.MYSQL_SSL ?? '').toLowerCase() === 'true';
+
 const pool = mysql.createPool({
   host: process.env.MYSQL_HOST,
+  port: mysqlPort,
   user: process.env.MYSQL_USER,
   password: process.env.MYSQL_PASSWORD,
   database: process.env.MYSQL_DATABASE,
+  ssl: useSSL ? { rejectUnauthorized: false } : undefined,
   waitForConnections: true,
   connectionLimit: 2,
   queueLimit: 0,

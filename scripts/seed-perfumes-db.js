@@ -18,9 +18,11 @@ async function main() {
   const perfumes = JSON.parse(match[1]);
   const pool = await mysql.createPool({
     host: process.env.MYSQL_HOST || 'sql10.freesqldatabase.com',
+    port: Number(process.env.MYSQL_PORT || 3306),
     user: process.env.MYSQL_USER || 'sql10822633',
     password: process.env.MYSQL_PASSWORD || 'fkSEFdX9Di',
     database: process.env.MYSQL_DATABASE || 'sql10822633',
+    ssl: String(process.env.MYSQL_SSL || '').toLowerCase() === 'true' ? { rejectUnauthorized: false } : undefined,
     waitForConnections: true,
     connectionLimit: 5,
   });
