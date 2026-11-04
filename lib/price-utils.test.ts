@@ -3,6 +3,7 @@ import {
   parseUsdt,
   formatUsdt,
   normalizeUsdt,
+  getUsdtNumericSqlExpression,
   calculatePrices,
   calculateDiscount,
   validateProductForm,
@@ -49,6 +50,12 @@ describe('normalizeUsdt', () => {
 
   it('returns empty for invalid', () => {
     expect(normalizeUsdt('abc')).toBe('');
+  });
+});
+
+describe('getUsdtNumericSqlExpression', () => {
+  it('uses single-quoted SQL literals for MySQL decimal conversion', () => {
+    expect(getUsdtNumericSqlExpression('USDT')).toBe("CAST(REPLACE(USDT, ',', '.') AS DECIMAL(10,2))");
   });
 });
 

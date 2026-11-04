@@ -29,6 +29,14 @@ export function normalizeUsdt(value: string): string {
   return formatUsdt(parsed);
 }
 
+/**
+ * Build the MySQL expression used to convert a comma-formatted USDT value into a decimal.
+ * Important: use single quotes so MySQL treats the replacement values as strings, not identifiers.
+ */
+export function getUsdtNumericSqlExpression(columnName: string = 'USDT'): string {
+  return `CAST(REPLACE(${columnName}, ',', '.') AS DECIMAL(10,2))`;
+}
+
 // ── Price Calculations ───────────────────────────────────────
 
 export interface PriceBreakdown {

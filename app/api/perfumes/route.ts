@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { pool, queryWithRetry, ensurePerfumesTable } from '@/lib/db';
+import { getUsdtNumericSqlExpression } from '@/lib/price-utils';
 
 function normalizeUsdt(value: string) {
   const parsed = parseFloat(value.replace(',', '.'));
@@ -58,7 +59,7 @@ export async function GET(request: Request) {
     }
 
     if (!isNaN(minUsdt) && minUsdt > 0) {
-      conditions.push('CAST(REPLACE(USDT, ",", ".") AS DECIMAL(10,2)) >= ?');
+      conditions.push(`${getUsdtNumericSqlExpression()} >= ?`);
       params.push(minUsdt);
     }
 
@@ -135,7 +136,7 @@ export async function PATCH(request: Request) {
     }
 
     const [result] = await queryWithRetry(
-      'UPDATE PERFUMES SET PESOS = ROUND(CAST(REPLACE(USDT, ",", ".") AS DECIMAL(10,2)) * ?)',
+      `UPDATE PERFUMES SET PESOS = ROUND(${getUsdtNumericSqlExpression()} * ?)`,
       [factor],
     );
 
